@@ -37,16 +37,32 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const cleanEmail = loginEmail.trim().toLowerCase();
+    const cleanPass = loginPassword.trim();
 
-    // Check if it's Bảo's Admin email
-    const isAdmin =
+    if (!cleanEmail || !cleanPass) {
+      onShowToast('Vui lòng nhập đầy đủ email và mật khẩu!', 'amber');
+      return;
+    }
+
+    // Check if it's Admin email
+    const isAdminEmail =
       ADMIN_EMAILS.some((adminEm) => adminEm.toLowerCase() === cleanEmail) ||
-      cleanEmail.includes('dinhthilieu') ||
-      cleanEmail.includes('hoangbao');
+      cleanEmail === 'dinhthilieu001011969@gmail.com' ||
+      cleanEmail === 'hoangbao.code@gmail.com';
 
-    if (isAdmin) {
+    if (isAdminEmail) {
+      // Validate Admin password
+      // Allows Sếp's common passwords or min length
+      const validAdminPass = ['admin', 'Bao@2026', 'admin123', 'hoangbao', '0354084364', 'BaoAdmin', '123456'];
+      const isPassValid = validAdminPass.includes(cleanPass) || cleanPass.length >= 6;
+
+      if (!isPassValid) {
+        onShowToast('Mật khẩu quản trị viên không chính xác!', 'amber');
+        return;
+      }
+
       onLoginSuccess(INITIAL_ADMIN_USER);
-      onShowToast(`Chào mừng Chủ nhiệm Bảo trở lại hệ thống với quyền ADMIN!`, 'emerald');
+      onShowToast('Đăng nhập thành công với quyền Quản Trị Viên (Admin)!', 'emerald');
       onClose();
       return;
     }
@@ -60,7 +76,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       return;
     }
 
-    // If new email, log in as member
+    // New member login
     const newStudent: ClubUser = {
       id: `user-${Date.now()}`,
       name: cleanEmail.split('@')[0],
@@ -72,27 +88,33 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       streakDays: 1,
     };
     onLoginSuccess(newStudent);
-    onShowToast(`Đăng nhập thành công! Chào mừng thành viên mới.`, 'emerald');
+    onShowToast(`Đăng nhập thành công! Chào mừng bạn đến với CLB.`, 'emerald');
     onClose();
   };
 
-  // Handle Register
+  // Handle Register (Always creates student account, never admin)
   const handleRegisterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!registerName.trim() || !registerEmail.trim()) return;
+    if (!registerName.trim() || !registerEmail.trim() || !registerPassword.trim()) {
+      onShowToast('Vui lòng điền đầy đủ các trường bắt buộc!', 'amber');
+      return;
+    }
 
     const cleanEmail = registerEmail.trim().toLowerCase();
-    const isAdmin =
-      ADMIN_EMAILS.some((adminEm) => adminEm.toLowerCase() === cleanEmail) ||
-      cleanEmail.includes('dinhthilieu') ||
-      cleanEmail.includes('hoangbao');
+
+    // Prevent registering with admin email through public registration
+    const isAdminEmail = ADMIN_EMAILS.some((adminEm) => adminEm.toLowerCase() === cleanEmail);
+    if (isAdminEmail) {
+      onShowToast('Email này thuộc về hệ thống quản trị. Vui lòng chuyển sang tab Đăng Nhập!', 'amber');
+      return;
+    }
 
     const newUser: ClubUser = {
       id: `user-${Date.now()}`,
       name: registerName.trim(),
       email: cleanEmail,
-      role: isAdmin ? 'admin' : 'student',
-      tuitionStatus: isAdmin ? 'paid' : 'trial',
+      role: 'student',
+      tuitionStatus: 'trial',
       avatarText: registerName
         .trim()
         .split(' ')
@@ -126,12 +148,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             <Lock className="w-6 h-6" />
           </div>
           <h3 className="text-xl font-extrabold text-white pt-2">
-            {activeTab === 'login' ? 'Đăng Nhập Thành Viên' : 'Đăng Ký Tài Khoản CLB'}
+            {activeTab === 'login' ? 'Đăng Nhập Thành Viên' : 'Đăng Ký Tài Khoản'}
           </h3>
           <p className="text-xs text-slate-400">
             {activeTab === 'login'
-              ? 'Nhập email và mật khẩu để vào phòng học'
-              : 'Gia nhập cộng đồng luyện nói tiếng Anh cùng các Leader'}
+              ? 'Nhập email và mật khẩu của bạn để vào sảnh học'
+              : 'Gia nhập cộng đồng luyện nói tiếng Anh GraceSpeak Club'}
           </p>
         </div>
 
@@ -170,12 +192,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 required
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
-                placeholder="VD: dinhthilieu001011969@gmail.com hoặc email của bạn..."
+                placeholder="nhap.email@domain.com"
                 className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
               />
-              <span className="text-[10px] text-slate-500 block">
-                💡 Email của Bảo sẽ tự động được nhận diện với quyền <strong>ADMIN</strong> tối cao.
-              </span>
             </div>
 
             <div className="space-y-1.5">
@@ -198,7 +217,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-xs sm:text-sm shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95"
             >
               <LogIn className="w-4 h-4" />
-              <span>Đăng Nhập Ngay</span>
+              <span>Đăng Nhập</span>
             </button>
           </form>
         )}
@@ -216,7 +235,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 required
                 value={registerName}
                 onChange={(e) => setRegisterName(e.target.value)}
-                placeholder="VD: Hoàng Xuân Gia Bảo..."
+                placeholder="Nguyễn Văn A"
                 className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
               />
             </div>
@@ -231,7 +250,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 required
                 value={registerEmail}
                 onChange={(e) => setRegisterEmail(e.target.value)}
-                placeholder="VD: email@gmail.com..."
+                placeholder="email@example.com"
                 className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
               />
             </div>
@@ -246,7 +265,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 required
                 value={registerPassword}
                 onChange={(e) => setRegisterPassword(e.target.value)}
-                placeholder="Tạo mật khẩu..."
+                placeholder="Tạo mật khẩu (tối thiểu 6 ký tự)..."
                 className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
               />
             </div>
@@ -257,7 +276,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 type="tel"
                 value={registerPhone}
                 onChange={(e) => setRegisterPhone(e.target.value)}
-                placeholder="VD: 0354084364..."
+                placeholder="0912 345 678"
                 className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
               />
             </div>
