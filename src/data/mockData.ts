@@ -18,18 +18,19 @@ export const INITIAL_ADMIN_USER: ClubUser = {
   streakDays: 19,
 };
 
-// Initial default user for any new visitor
+// Default visitor state
 export const DEFAULT_GUEST_USER: ClubUser = {
   id: 'guest-user',
-  name: 'Học Viên Mới',
-  email: 'hocvien@graceclub.edu.vn',
+  name: 'Khách Tham Quan',
+  email: 'khach@graceclub.edu.vn',
   role: 'student',
   tuitionStatus: 'trial',
-  avatarText: 'HV',
+  avatarText: 'K',
   joinDate: 'Hôm nay',
   streakDays: 1,
 };
 
+// Official Staff only - Zero test users
 export const INITIAL_USERS: ClubUser[] = [
   INITIAL_ADMIN_USER,
   {
@@ -45,8 +46,9 @@ export const INITIAL_USERS: ClubUser[] = [
   },
 ];
 
+// Official Rooms only - Zero test/mock rooms
 export const INITIAL_ROOMS: EnglishRoom[] = [
-  // 1. PHÂN CẤP PHÒNG: NEWBIE
+  // 1. PHÂN CẤP PHÒNG: NEWBIE (A1-A2)
   {
     id: 'room-nb-1',
     title: 'Phát âm chuẩn 44 âm IPA & Ngữ điệu tự nhiên',
@@ -55,13 +57,13 @@ export const INITIAL_ROOMS: EnglishRoom[] = [
     leaderId: 'user-leader-1',
     leaderName: 'Cô Hoàng Lan Anh',
     leaderAvatar: 'LA',
-    topic: 'Luyện cặp âm khó /i:/ vs /ɪ/, /θ/ vs /ð/ & Cách nối âm',
+    topic: 'Luyện cặp âm khó /i:/ vs /ɪ/, /θ/ vs /ð/ & Kỹ thuật nối âm',
     code: '#ENG-NB101',
-    membersCount: 14,
+    membersCount: 8,
     maxMembers: 20,
     isLive: true,
     scheduledTime: 'Đang diễn ra trực tiếp',
-    activeAvatars: ['VA', 'HV', 'LA'],
+    activeAvatars: ['LA', 'GB'],
     vocabList: [
       'Pronunciation /prəˌnʌn.siˈeɪ.ʃən/: Phát âm',
       'Vowel /ˈvaʊ.əl/: Nguyên âm',
@@ -71,19 +73,19 @@ export const INITIAL_ROOMS: EnglishRoom[] = [
   },
   {
     id: 'room-nb-2',
-    title: 'Từ vựng & Mẫu câu phản xạ Du Lịch Sinh Tồn',
+    title: 'Từ vựng & Mẫu câu phản xạ Giao Tiếp Đời Sống',
     level: 'newbie',
     levelLabel: '🌱 Cấp Độ Newbie (A1-A2)',
     leaderId: 'user-leader-1',
     leaderName: 'Cô Hoàng Lan Anh',
     leaderAvatar: 'LA',
-    topic: 'Cách gọi món tại nhà hàng & Hỏi đường khi du lịch',
+    topic: 'Cách gọi món tại nhà hàng, hỏi đường và mua sắm cơ bản',
     code: '#ENG-NB102',
-    membersCount: 6,
+    membersCount: 5,
     maxMembers: 15,
     isLive: false,
     scheduledTime: '20:00 Tối nay',
-    activeAvatars: ['VA'],
+    activeAvatars: ['LA'],
     vocabList: [
       'Order /ˈɔː.dər/: Đặt món',
       'Receipt /rɪˈsiːt/: Hóa đơn',
@@ -91,7 +93,7 @@ export const INITIAL_ROOMS: EnglishRoom[] = [
     ],
   },
 
-  // 2. PHÂN CẤP PHÒNG: INTERMEDIATE
+  // 2. PHÂN CẤP PHÒNG: INTERMEDIATE (B1-B2)
   {
     id: 'room-it-1',
     title: 'Daily Topic Talk: "Travel Experiences & Dream Destinations"',
@@ -100,13 +102,13 @@ export const INITIAL_ROOMS: EnglishRoom[] = [
     leaderId: 'user-leader-1',
     leaderName: 'Cô Hoàng Lan Anh',
     leaderAvatar: 'LA',
-    topic: 'Thảo luận chia sẻ chuyến đi đáng nhớ nhất & Trải nghiệm sốc văn hóa',
+    topic: 'Thảo luận chia sẻ chuyến đi đáng nhớ nhất & Trải nghiệm giao thoa văn hóa',
     code: '#ENG-IT201',
-    membersCount: 18,
+    membersCount: 12,
     maxMembers: 25,
     isLive: true,
     scheduledTime: 'Đang diễn ra trực tiếp',
-    activeAvatars: ['GB', 'LA', 'VA'],
+    activeAvatars: ['GB', 'LA'],
     vocabList: [
       'Breathtaking /ˈbreθˌteɪ.kɪŋ/: Đẹp ngoạn mục',
       'Local delicacy /ˈdel.ɪ.kə.si/: Đặc sản địa phương',
@@ -115,18 +117,18 @@ export const INITIAL_ROOMS: EnglishRoom[] = [
     ],
   },
 
-  // 3. PHÂN CẤP PHÒNG: ADVANCE
+  // 3. PHÂN CẤP PHÒNG: ADVANCE (C1-C2)
   {
     id: 'room-ad-1',
-    title: 'IELTS Speaking Mock Test 7.5+ & Tranh Biện (Debate)',
+    title: 'Luyện Nói IELTS Speaking 7.5+ & Tranh Biện Học Thuật',
     level: 'advance',
     levelLabel: '🌳 Cấp Độ Advance (C1-C2)',
     leaderId: 'user-admin',
     leaderName: 'Hoàng Xuân Gia Bảo (Admin)',
     leaderAvatar: 'GB',
-    topic: 'Debate Topic: "Will Artificial Intelligence replace human educators?"',
+    topic: 'Chủ đề tranh biện: "Will Artificial Intelligence replace human educators?"',
     code: '#ENG-AD301',
-    membersCount: 9,
+    membersCount: 7,
     maxMembers: 12,
     isLive: true,
     scheduledTime: 'Đang diễn ra trực tiếp',

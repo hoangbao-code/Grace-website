@@ -16,7 +16,20 @@ export default function App() {
   // Global State - Default to 'intro' landing page when first entering
   const [currentView, setCurrentView] = useState<'intro' | 'lobby' | 'room' | 'admin'>('intro');
   const [users, setUsers] = useState<ClubUser[]>(INITIAL_USERS);
-  const [currentUser, setCurrentUser] = useState<ClubUser>(DEFAULT_GUEST_USER);
+  
+  // Ghi nhớ người dùng / Admin vào hệ thống từ đầu
+  const [currentUser, setCurrentUser] = useState<ClubUser>(() => {
+    try {
+      const saved = localStorage.getItem('grace_current_user');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return DEFAULT_GUEST_USER;
+  });
+
   const [rooms, setRooms] = useState<EnglishRoom[]>(INITIAL_ROOMS);
   const [currentRoom, setCurrentRoom] = useState<EnglishRoom>(INITIAL_ROOMS[0]);
 
@@ -44,8 +57,13 @@ export default function App() {
     }, 3500);
   };
 
-  // Join Room
+  // Join Room - CHẶN HOÀN TOÀN KHI CHƯA ĐĂNG NHẬP / ĐĂNG KÝ
   const handleJoinRoom = (room: EnglishRoom) => {
+    if (currentUser.id === 'guest-user') {
+      setIsLoginModalOpen(true);
+      showToast('Bạn chưa đăng nhập! Vui lòng đăng nhập hoặc đăng ký tài khoản để vào phòng học.', 'amber');
+      return;
+    }
     setCurrentRoom(room);
     setCurrentView('room');
     showToast(`Đã tham gia phòng học "${room.title}"`, 'indigo');
@@ -72,7 +90,9 @@ export default function App() {
       prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
     );
     if (currentUser.id === userId) {
-      setCurrentUser((prev) => ({ ...prev, role: newRole }));
+      const updatedUser = { ...currentUser, role: newRole };
+      setCurrentUser(updatedUser);
+      localStorage.setItem('grace_current_user', JSON.stringify(updatedUser));
     }
   };
 
@@ -82,20 +102,48 @@ export default function App() {
       prev.map((u) => (u.id === userId ? { ...u, tuitionStatus: newStatus } : u))
     );
     if (currentUser.id === userId) {
-      setCurrentUser((prev) => ({ ...prev, tuitionStatus: newStatus }));
+      const updatedUser = { ...currentUser, tuitionStatus: newStatus };
+      setCurrentUser(updatedUser);
+      localStorage.setItem('grace_current_user', JSON.stringify(updatedUser));
     }
   };
 
-  // Register New Student
+  // Login Handler (Persist to localStorage)
+  const handleLoginSuccess = (user: ClubUser) => {
+    setCurrentUser(user);
+    try {
+      localStorage.setItem('grace_current_user', JSON.stringify(user));
+    } catch (e) {
+      console.error(e);
+    }
+    if (user.role === 'admin') {
+      setCurrentView('admin');
+    } else {
+      setCurrentView('lobby');
+    }
+  };
+
+  // Register New Student (Persist to localStorage)
   const handleRegisterUser = (newUser: ClubUser) => {
     setUsers((prev) => [...prev, newUser]);
     setCurrentUser(newUser);
+    try {
+      localStorage.setItem('grace_current_user', JSON.stringify(newUser));
+    } catch (e) {
+      console.error(e);
+    }
+    setCurrentView('lobby');
   };
 
-  // Logout Handler
+  // Logout Handler (Clear localStorage)
   const handleLogout = () => {
     setCurrentUser(DEFAULT_GUEST_USER);
-    if (currentView === 'admin') {
+    try {
+      localStorage.removeItem('grace_current_user');
+    } catch (e) {
+      console.error(e);
+    }
+    if (currentView === 'admin' || currentView === 'room') {
       setCurrentView('intro');
     }
     showToast('Đã đăng xuất tài khoản thành công', 'slate');
@@ -194,12 +242,7 @@ export default function App() {
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
         users={users}
-        onLoginSuccess={(u) => {
-          setCurrentUser(u);
-          if (u.role === 'admin') {
-            setCurrentView('admin');
-          }
-        }}
+        onLoginSuccess={handleLoginSuccess}
         onRegisterSuccess={handleRegisterUser}
         onShowToast={showToast}
       />

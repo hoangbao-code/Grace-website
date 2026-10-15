@@ -46,15 +46,19 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
     // Check if it's Admin email
     const isAdminEmail =
-      ADMIN_EMAILS.some((adminEm) => adminEm.toLowerCase() === cleanEmail) ||
       cleanEmail === 'dinhthilieu001011969@gmail.com' ||
-      cleanEmail === 'hoangbao.code@gmail.com';
+      cleanEmail === 'hoangbao.code@gmail.com' ||
+      ADMIN_EMAILS.some((adminEm) => adminEm.toLowerCase() === cleanEmail);
 
     if (isAdminEmail) {
-      // Validate Admin password
-      // Allows Sếp's common passwords or min length
-      const validAdminPass = ['admin', 'Bao@2026', 'admin123', 'hoangbao', '0354084364', 'BaoAdmin', '123456'];
-      const isPassValid = validAdminPass.includes(cleanPass) || cleanPass.length >= 6;
+      // Sếp requested: pass là cùng 1 cái tên mail của tôi
+      const isPassValid =
+        cleanPass === cleanEmail ||
+        cleanPass === cleanEmail.split('@')[0] ||
+        cleanPass === 'dinhthilieu001011969@gmail.com' ||
+        cleanPass === 'dinhthilieu001011969' ||
+        cleanPass === 'admin' ||
+        cleanPass === 'admin123';
 
       if (!isPassValid) {
         onShowToast('Mật khẩu quản trị viên không chính xác!', 'amber');
@@ -62,7 +66,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       }
 
       onLoginSuccess(INITIAL_ADMIN_USER);
-      onShowToast('Đăng nhập thành công với quyền Quản Trị Viên (Admin)!', 'emerald');
+      onShowToast('Đăng nhập thành công! Quyền ADMIN của Chủ Nhiệm Bảo đã được kích hoạt.', 'emerald');
       onClose();
       return;
     }
