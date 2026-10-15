@@ -19,11 +19,13 @@ import {
   PartyPopper,
   Gift,
   Trophy,
+  FileText,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { ChatMessage, ClubUser, EnglishRoom, FloatingEmoji, RoomParticipant } from '../types';
 import { audioEngine } from '../services/audioService';
 import { LuckyWheelModal } from './LuckyWheelModal';
+import { SessionRecapModal } from './SessionRecapModal';
 
 interface RoomViewProps {
   room: EnglishRoom;
@@ -80,6 +82,9 @@ export const RoomView: React.FC<RoomViewProps> = ({
 
   // TÍNH NĂNG 6: Comic Speech Bubbles
   const [activeSpeechBubbles, setActiveSpeechBubbles] = useState<ActiveSpeechBubble[]>([]);
+
+  // TÍNH NĂNG 5: Session Recap Exporter Modal
+  const [isRecapModalOpen, setIsRecapModalOpen] = useState<boolean>(false);
 
   // Host Leader specific controls
   const isLeaderOrAdmin = currentUser.role === 'admin' || currentUser.id === room.leaderId;
@@ -511,16 +516,27 @@ export const RoomView: React.FC<RoomViewProps> = ({
           <span className="text-xs text-white font-bold max-w-xs truncate">{room.topic}</span>
         </div>
 
-        {/* Right: Leader Mute All & Raise Hand */}
+        {/* Right: Leader Controls & Raise Hand */}
         <div className="flex items-center gap-2">
           {isLeaderOrAdmin && (
-            <button
-              onClick={handleHostMuteAll}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold transition-all cursor-pointer"
-            >
-              <VolumeX className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Tắt Mic Cả Lớp</span>
-            </button>
+            <>
+              <button
+                onClick={() => setIsRecapModalOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40 text-xs font-bold transition-all cursor-pointer shadow-lg"
+                title="Xuất bản tóm tắt buổi học để gửi Zalo/Facebook nhóm lớp"
+              >
+                <FileText className="w-3.5 h-3.5 text-purple-400" />
+                <span className="hidden sm:inline">Xuất Recap Buổi</span>
+              </button>
+
+              <button
+                onClick={handleHostMuteAll}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold transition-all cursor-pointer"
+              >
+                <VolumeX className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Tắt Mic Cả Lớp</span>
+              </button>
+            </>
           )}
 
           <button
@@ -926,6 +942,17 @@ export const RoomView: React.FC<RoomViewProps> = ({
                   </div>
                 ))}
               </div>
+
+              {/* Quick Recap Exporter Button */}
+              <div className="pt-3 border-t border-white/10 mt-2">
+                <button
+                  onClick={() => setIsRecapModalOpen(true)}
+                  className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-purple-600/30 to-indigo-600/30 hover:from-purple-600/50 hover:to-indigo-600/50 border border-purple-500/40 text-purple-200 text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md"
+                >
+                  <FileText className="w-3.5 h-3.5 text-purple-400" />
+                  <span>📋 Xuất Tóm Tắt Buổi Học (Recap)</span>
+                </button>
+              </div>
             </div>
           )}
 
@@ -1030,6 +1057,16 @@ export const RoomView: React.FC<RoomViewProps> = ({
           onShowToast(`🎉 ${winner.name} đã được chọn để mở mic luyện nói!`, 'amber');
           setTimeout(() => setLuckySpotlightId(null), 15000);
         }}
+      />
+
+      {/* Session Recap Modal */}
+      <SessionRecapModal
+        isOpen={isRecapModalOpen}
+        room={room}
+        vocabList={vocabList}
+        participantsCount={participants.length + 1}
+        onClose={() => setIsRecapModalOpen(false)}
+        onShowToast={onShowToast}
       />
     </main>
   );

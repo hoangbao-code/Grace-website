@@ -1,4 +1,4 @@
-import { ClubUser, EnglishRoom } from '../types';
+import { ClubUser, EnglishRoom, LeaderboardUser } from '../types';
 
 export const ADMIN_EMAILS = [
   'dinhthilieu001011969@gmail.com',
@@ -139,5 +139,63 @@ export const INITIAL_ROOMS: EnglishRoom[] = [
       'Empathetic connection: Sự kết nối thấu cảm',
       'Counter-argument: Luận điểm phản bác',
     ],
+  },
+
+  // 4. KHÔNG GIAN TỰ HỌC & LUYỆN NÓI TỰ DO 24/7 (STUDY WITH ME & ICE-BREAKING)
+  {
+    id: 'room-lounge-247',
+    title: '☕ Fluently Open Lounge 24/7 — Phòng Tự Học & Luyện Nói Tự Do (Study With Me)',
+    level: 'intermediate',
+    levelLabel: '☕ Open Lounge 24/7 (Tự Do)',
+    leaderId: 'system-bot',
+    leaderName: 'Fluently Lounge Host (Tự Động 24/7)',
+    leaderAvatar: '☕',
+    topic: 'Không gian mở 24/7: Bật camera tự học bài, ghép cặp luyện nói tiếng Anh tự do, ice-breaking kết bạn không cần giáo viên!',
+    code: '#LOUNGE-247',
+    membersCount: 14,
+    maxMembers: 50,
+    isLive: true,
+    scheduledTime: 'Mở cửa 24/7 liên tục',
+    activeAvatars: ['GB', 'LA', 'TU', 'MI'],
+    vocabList: [
+      'Ice-breaker: Câu chuyện bắt đầu làm quen',
+      'What are you working on today?: Hôm nay bạn đang làm bài gì thế?',
+      'Care for a 10-minute quick talk?: Bạn có muốn trò chuyện nhanh 10 phút không?',
+      'Practice makes perfect: Luyện tập tạo nên sự hoàn hảo',
+    ],
+  },
+];
+
+// BẢNG VÀNG VINH DANH TUẦN (WEEKLY FLUENCY STARS)
+export const LEADERBOARD_TOP_USERS: LeaderboardUser[] = [
+  {
+    rank: 1,
+    name: 'Cô Hoàng Lan Anh',
+    avatarText: 'LA',
+    roleTitle: 'Leader CLB / Giảng viên',
+    exp: 3450,
+    badgeTitle: 'Bậc Thầy Giao Tiếp',
+    badgeLevel: 'Master of Fluency',
+    streakDays: 32,
+  },
+  {
+    rank: 2,
+    name: 'Hoàng Xuân Gia Bảo',
+    avatarText: 'GB',
+    roleTitle: 'Admin & Founder',
+    exp: 2980,
+    badgeTitle: 'Người Nói Tự Tin',
+    badgeLevel: 'Confident Speaker',
+    streakDays: 19,
+  },
+  {
+    rank: 3,
+    name: 'Nguyễn Minh Tuấn',
+    avatarText: 'MT',
+    roleTitle: 'Học viên Tích Cực',
+    exp: 2150,
+    badgeTitle: 'Chiến Thần Khám Phá',
+    badgeLevel: 'Explorer',
+    streakDays: 14,
   },
 ];

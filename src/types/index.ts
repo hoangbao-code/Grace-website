@@ -63,3 +63,14 @@ export interface FloatingEmoji {
   x: number;
   y: number;
 }
+
+export interface LeaderboardUser {
+  rank: 1 | 2 | 3 | number;
+  name: string;
+  avatarText: string;
+  roleTitle: string;
+  exp: number;
+  badgeTitle: string;
+  badgeLevel: 'Seedling' | 'Explorer' | 'Confident Speaker' | 'Master of Fluency';
+  streakDays: number;
+}

@@ -6,8 +6,14 @@ import {
   ArrowRight,
   Flame,
   Clock,
+  Trophy,
+  Award,
+  Sparkles,
+  Coffee,
+  Zap,
 } from 'lucide-react';
 import { ClubUser, EnglishLevel, EnglishRoom } from '../types';
+import { LEADERBOARD_TOP_USERS } from '../data/mockData';
 
 interface LobbyViewProps {
   currentUser: ClubUser;
@@ -42,6 +48,24 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
     onCreateRoomModal();
   };
 
+  const loungeRoom = rooms.find((r) => r.id === 'room-lounge-247') || rooms[0];
+
+  const userExp =
+    currentUser.role === 'admin'
+      ? 2980
+      : currentUser.role === 'leader'
+      ? 3450
+      : 1250;
+
+  const userBadge =
+    userExp >= 3000
+      ? 'Master of Fluency 👑'
+      : userExp >= 2500
+      ? 'Confident Speaker 🌟'
+      : userExp >= 1000
+      ? 'Explorer 🚀'
+      : 'Seedling 🌱';
+
   return (
     <main className="flex-1 max-w-7xl mx-auto w-full px-4 lg:px-8 py-6 space-y-8">
       {/* English Club Welcome Banner */}
@@ -62,8 +86,8 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
               ! 🎯
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Bạn có thể tự do tham gia vào bất kỳ phòng học nào bên dưới do Cô giáo và các Leader điều phối.
-              Mỗi phòng đều có chủ đề phản xạ và từ vựng riêng biệt.
+              Bạn có thể tự do tham gia vào bất kỳ phòng học nào bên dưới do Cô giáo và các Leader điều phối,
+              hoặc ghé thăm phòng <strong>Open Lounge 24/7</strong> để bật cam tự học và luyện phản xạ cùng bạn bè bất kỳ lúc nào!
             </p>
           </div>
 
@@ -100,17 +124,16 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
           </div>
         </div>
 
-        {/* Club Quick Summary Mini Cards */}
+        {/* Club Quick Summary Mini Cards with EXP Gamification */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-white/10 text-xs">
           <div className="bg-slate-900/40 p-3 rounded-xl border border-white/5">
-            <span className="text-slate-400">Trạng thái tài khoản</span>
-            <p className="text-base font-bold text-white mt-1 uppercase">
-              {currentUser.role === 'admin'
-                ? '👑 Quản Trị Viên'
-                : currentUser.role === 'leader'
-                ? '⭐ Leader / Host'
-                : '🎓 Học Viên CLB'}
+            <span className="text-slate-400">Cấp bậc & Danh hiệu</span>
+            <p className="text-sm font-bold text-amber-300 mt-1 truncate">
+              {userBadge}
             </p>
+            <span className="text-[10px] text-slate-400 font-mono">
+              ⭐ {userExp.toLocaleString()} EXP
+            </span>
           </div>
           <div className="bg-slate-900/40 p-3 rounded-xl border border-white/5">
             <span className="text-slate-400">Học phí CLB</span>
@@ -134,6 +157,153 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
               <Flame className="w-4 h-4 fill-current" />
               <span>{currentUser.streakDays} ngày liên tiếp</span>
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* FEATURE 6: FLUENTLY OPEN LOUNGE 24/7 HERO BANNER */}
+      {loungeRoom && (
+        <section className="relative rounded-3xl overflow-hidden p-6 md:p-8 bg-gradient-to-r from-purple-950/70 via-slate-900/90 to-cyan-950/70 border border-purple-500/40 shadow-2xl group transition-all">
+          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-700" />
+          <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+            <div className="space-y-3 max-w-3xl">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-xs font-black flex items-center gap-1.5 uppercase tracking-wider">
+                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                  <span>☕ KHÔNG GIAN TỰ HỌC 24/7 • STUDY WITH ME</span>
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[11px] font-bold">
+                  Không Cần Chờ Giáo Viên
+                </span>
+              </div>
+
+              <h2 className="text-xl md:text-2xl font-black text-white group-hover:text-cyan-300 transition-colors">
+                ☕ Fluently Open Lounge 24/7 — Phòng Luyện Nói & Tự Học Tự Do
+              </h2>
+
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                Nơi bạn có thể tự do vào bật camera tự học bài, ghép cặp luyện nói tiếng Anh phản xạ tự nhiên (Small Talk / Ice-breaking)
+                và kết nối với bạn bè trong câu lạc bộ suốt 24 giờ mỗi ngày!
+              </p>
+
+              <div className="flex items-center gap-4 text-xs text-slate-300 pt-1">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                  <strong className="text-white">14 bạn</strong> đang tự học & luyện nói
+                </span>
+                <span>•</span>
+                <span className="text-purple-300">Phản xạ tự nhiên & không áp lực</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => onJoinRoom(loungeRoom)}
+              className="w-full lg:w-auto px-6 py-4 rounded-2xl bg-gradient-to-r from-purple-500 via-indigo-500 to-cyan-500 hover:from-purple-400 hover:to-cyan-400 text-white font-black text-sm shadow-xl shadow-purple-500/30 flex items-center justify-center gap-2.5 transition-all cursor-pointer active:scale-95 flex-shrink-0"
+            >
+              <Coffee className="w-4 h-4" />
+              <span>Vào Open Lounge 24/7 Ngay</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </section>
+      )}
+
+      {/* FEATURE 4: BẢNG VÀNG VINH DANH TUẦN (WEEKLY FLUENCY STARS & GAMIFICATION) */}
+      <section className="glass-panel rounded-3xl p-6 md:p-8 border border-amber-500/30 shadow-2xl space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/10">
+          <div>
+            <div className="flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-amber-400" />
+              <h2 className="text-xl sm:text-2xl font-black text-white">
+                Bảng Vàng Vinh Danh Tuần • Weekly Fluency Stars
+              </h2>
+            </div>
+            <p className="text-xs text-slate-400 mt-1">
+              Vinh danh Top 3 thành viên tích cực mở mic luyện nói & tham gia sinh hoạt sôi nổi nhất tuần.
+            </p>
+          </div>
+
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold self-start sm:self-auto">
+            <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-spin" />
+            <span>Cập nhật bảng xếp hạng hàng tuần</span>
+          </div>
+        </div>
+
+        {/* Top 3 Podium Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {LEADERBOARD_TOP_USERS.map((user) => (
+            <div
+              key={user.rank}
+              className={`p-5 rounded-2xl relative overflow-hidden flex flex-col justify-between space-y-4 border transition-all hover:-translate-y-1 ${
+                user.rank === 1
+                  ? 'bg-gradient-to-b from-amber-950/40 via-slate-900/90 to-slate-950 border-amber-500/60 shadow-xl shadow-amber-500/15'
+                  : user.rank === 2
+                  ? 'bg-gradient-to-b from-slate-800/50 via-slate-900/90 to-slate-950 border-slate-400/50 shadow-lg'
+                  : 'bg-gradient-to-b from-amber-900/20 via-slate-900/90 to-slate-950 border-amber-700/50 shadow-md'
+              }`}
+            >
+              <div className="flex items-start justify-between">
+                {/* Rank Badge */}
+                <span
+                  className={`w-9 h-9 rounded-xl font-black text-sm flex items-center justify-center shadow-lg ${
+                    user.rank === 1
+                      ? 'bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-950 shadow-amber-400/30'
+                      : user.rank === 2
+                      ? 'bg-gradient-to-tr from-slate-200 to-slate-400 text-slate-950 shadow-slate-300/30'
+                      : 'bg-gradient-to-tr from-amber-700 to-orange-600 text-white shadow-amber-700/30'
+                  }`}
+                >
+                  {user.rank === 1 ? '🥇 1' : user.rank === 2 ? '🥈 2' : '🥉 3'}
+                </span>
+
+                <span className="text-[11px] font-mono px-2.5 py-1 rounded-full bg-slate-950/80 border border-white/10 text-amber-300 font-bold flex items-center gap-1">
+                  <Zap className="w-3 h-3 fill-current text-amber-400" />
+                  <span>{user.exp.toLocaleString()} EXP</span>
+                </span>
+              </div>
+
+              {/* User Identity */}
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-500 to-cyan-500 p-0.5 shadow-md flex-shrink-0">
+                  <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center font-black text-sm text-white">
+                    {user.avatarText}
+                  </div>
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-sm font-black text-white truncate">{user.name}</h4>
+                  <p className="text-[11px] text-slate-400 truncate">{user.roleTitle}</p>
+                </div>
+              </div>
+
+              {/* Badge Rank Title */}
+              <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs">
+                <span className="text-slate-400 text-[11px]">Danh hiệu:</span>
+                <span className="px-2.5 py-1 rounded-lg bg-purple-500/20 text-purple-200 border border-purple-500/30 font-bold text-[11px]">
+                  {user.badgeTitle}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Fluency Evolution Roadmap Strip */}
+        <div className="p-4 rounded-2xl bg-slate-950/60 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <span className="font-bold text-slate-300 flex items-center gap-1.5 uppercase text-[11px] tracking-wider">
+            <Award className="w-4 h-4 text-purple-400" />
+            <span>Hệ Thống Tiến Hóa Danh Hiệu Fluently:</span>
+          </span>
+
+          <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold text-slate-400">
+            <span className="px-2 py-0.5 rounded-md bg-slate-900 border border-white/5">🌱 Seedling (&lt;1,000 EXP)</span>
+            <span>➔</span>
+            <span className="px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 border border-blue-500/30">🚀 Explorer (1,000+)</span>
+            <span>➔</span>
+            <span className="px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-300 border border-purple-500/30">🌟 Confident Speaker (2,500+)</span>
+            <span>➔</span>
+            <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold">👑 Master of Fluency (5,000+)</span>
           </div>
         </div>
       </section>
