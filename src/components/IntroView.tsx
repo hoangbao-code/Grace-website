@@ -246,6 +246,97 @@ export const IntroView: React.FC<IntroViewProps> = ({
           </button>
         </div>
       </section>
+
+      {/* SẾP BẢO - THÔNG TIN LIÊN HỆ CHÍNH THỨC */}
+      <section className="glass-panel rounded-3xl p-6 sm:p-10 border border-white/10 space-y-8 relative overflow-hidden">
+        {/* Glow backdrop */}
+        <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Section Header */}
+        <div className="text-center space-y-2 max-w-xl mx-auto">
+          <div className="inline-flex items-center gap-1.5 text-xs font-bold text-cyan-400 uppercase tracking-wider">
+            <Sparkles className="w-4 h-4" />
+            <span>Kênh Hỗ Trợ & Kết Nối Trực Tiếp</span>
+          </div>
+          <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            Thông Tin Liên Hệ Của Tôi
+          </h3>
+          <p className="text-xs sm:text-sm text-slate-400">
+            Mọi thắc mắc về phòng học, lộ trình luyện nói, kích hoạt học phí hay hợp tác cùng CLB, bạn có thể liên hệ trực tiếp với tôi qua các kênh dưới đây.
+          </p>
+        </div>
+
+        {/* Contact Info Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Hotline / Zalo */}
+          <a
+            href="tel:0354084364"
+            className="p-5 rounded-2xl bg-slate-900/80 border border-white/5 hover:border-emerald-500/30 transition-all duration-200 space-y-2 block group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
+              <span className="text-lg">📞</span>
+            </div>
+            <div className="text-xs text-slate-400 font-medium">Hotline / Zalo Trực Tiếp</div>
+            <div className="text-base font-extrabold text-emerald-300 tracking-wide">
+              0354.084.364
+            </div>
+            <p className="text-[11px] text-slate-400">Hỗ trợ tư vấn & giải đáp 24/7</p>
+          </a>
+
+          {/* Email */}
+          <a
+            href="mailto:dinhthilieu001011969@gmail.com"
+            className="p-5 rounded-2xl bg-slate-900/80 border border-white/5 hover:border-indigo-500/30 transition-all duration-200 space-y-2 block group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform">
+              <span className="text-lg">✉️</span>
+            </div>
+            <div className="text-xs text-slate-400 font-medium">Email Chính Thức</div>
+            <div className="text-xs font-bold text-indigo-300 break-all">
+              dinhthilieu001011969@gmail.com
+            </div>
+            <p className="text-[11px] text-slate-400">Phản hồi thư trong ngày</p>
+          </a>
+
+          {/* Admin Owner */}
+          <div className="p-5 rounded-2xl bg-slate-900/80 border border-white/5 space-y-2">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400">
+              <span className="text-lg">👑</span>
+            </div>
+            <div className="text-xs text-slate-400 font-medium">Người Sáng Lập & Quản Trị</div>
+            <div className="text-base font-extrabold text-white">
+              Hoàng Xuân Gia Bảo
+            </div>
+            <p className="text-[11px] text-purple-300">Chủ nhiệm CLB GraceSpeak</p>
+          </div>
+
+          {/* VietQR MBBank */}
+          <div className="p-5 rounded-2xl bg-slate-900/80 border border-white/5 space-y-2">
+            <div className="w-10 h-10 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+              <span className="text-lg">💳</span>
+            </div>
+            <div className="text-xs text-slate-400 font-medium">Ngân Hàng MBBank</div>
+            <div className="text-base font-extrabold text-cyan-300 tracking-wider">
+              0354084364
+            </div>
+            <p className="text-[11px] text-slate-400">HOANG XUAN GIA BAO</p>
+          </div>
+        </div>
+
+        {/* Footer Credit Line */}
+        <div className="pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+          <div className="flex items-center gap-3">
+            <Logo size="sm" showText={false} />
+            <span className="font-semibold text-slate-300">
+              GraceSpeak English Community
+            </span>
+          </div>
+          <div>
+            Nền tảng được phát triển & quản trị bởi{' '}
+            <span className="font-bold text-white">Hoàng Xuân Gia Bảo</span> • © 2026
+          </div>
+        </div>
+      </section>
     </main>
   );
 };
