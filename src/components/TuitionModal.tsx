@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Crown, Check, QrCode, Copy, ShieldCheck, Sparkles } from 'lucide-react';
+import { X, Crown, QrCode, ShieldCheck } from 'lucide-react';
 import { ClubUser } from '../types';
 import { audioEngine } from '../services/audioService';
 
@@ -71,8 +71,8 @@ export const TuitionModal: React.FC<TuitionModalProps> = ({
             Nộp Học Phí & Kích Hoạt Thẻ Học Viên
           </h3>
           <p className="text-xs text-slate-300 max-w-md mx-auto">
-            Học viên: <strong className="text-white">{currentUser.name}</strong> • Cấp độ:{' '}
-            <strong className="text-indigo-300 uppercase">{currentUser.level}</strong>
+            Học viên: <strong className="text-white">{currentUser.name}</strong> • Email:{' '}
+            <strong className="text-indigo-300 font-mono">{currentUser.email}</strong>
           </p>
         </div>
 
@@ -85,7 +85,6 @@ export const TuitionModal: React.FC<TuitionModalProps> = ({
               price: 399000,
               label: '399.000đ',
               period: '90 ngày (Hot 🔥)',
-              isPopular: true,
             },
             { name: 'Thẻ VIP 1 Năm', price: 999000, label: '999.000đ', period: '365 ngày' },
           ].map((plan, idx) => (

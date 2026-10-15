@@ -2,13 +2,9 @@ import React, { useState } from 'react';
 import {
   Video,
   PlusCircle,
-  Users,
-  Sparkles,
   BookOpen,
   ArrowRight,
-  ShieldAlert,
   Flame,
-  CheckCircle,
   Clock,
 } from 'lucide-react';
 import { ClubUser, EnglishLevel, EnglishRoom } from '../types';
@@ -56,7 +52,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold">
               <span className="animate-pulse">✨</span>
-              <span>CÂU LẠC BỘ TIẾNG ANH • HỆ THỐNG PHÂN CẤP TƯƠNG TÁC THỜI GIAN THỰC</span>
+              <span>CÂU LẠC BỘ TIẾNG ANH • HỆ THỐNG PHÒNG HỌC PHÂN CẤP TƯƠNG TÁC THỜI GIAN THỰC</span>
             </div>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white">
               Chào mừng,{' '}
@@ -66,8 +62,8 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
               ! 🎯
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Chọn phân khu đúng trình độ của bạn để tham gia vào phòng luyện nói do Cô giáo và các Leader điều phối.
-              Mỗi phòng đều có chủ đề phản xạ và từ vựng riêng.
+              Bạn có thể tự do tham gia vào bất kỳ phòng học nào bên dưới do Cô giáo và các Leader điều phối.
+              Mỗi phòng đều có chủ đề phản xạ và từ vựng riêng biệt.
             </p>
           </div>
 
@@ -113,7 +109,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
                 ? '👑 Quản Trị Viên'
                 : currentUser.role === 'leader'
                 ? '⭐ Leader / Host'
-                : `🎓 Học Viên (${currentUser.level})`}
+                : '🎓 Học Viên CLB'}
             </p>
           </div>
           <div className="bg-slate-900/40 p-3 rounded-xl border border-white/5">
@@ -147,13 +143,13 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-xl sm:text-2xl font-bold text-white">Phân Khu Học Tập Theo Trình Độ</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-white">Phân Cấp Phòng Theo Cấp Độ</h2>
               <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-bold">
                 {rooms.length} phòng học
               </span>
             </div>
             <p className="text-xs text-slate-400">
-              Chọn khu vực phù hợp với khả năng của bạn để luyện tập hiệu quả nhất.
+              Bạn có thể tự do bấm chọn bất kỳ phòng học nào phù hợp với trình độ và nhu cầu của bạn.
             </p>
           </div>
 
@@ -167,7 +163,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
                   : 'bg-slate-900/80 text-slate-300 hover:text-white border border-white/10'
               }`}
             >
-              Tất cả các khu ({rooms.length})
+              Tất cả phòng ({rooms.length})
             </button>
             <button
               onClick={() => setSelectedLevel('newbie')}
@@ -178,7 +174,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
               }`}
             >
               <span>🌱</span>
-              <span>Khu Newbie (A1-A2)</span>
+              <span>Phòng Newbie (A1-A2)</span>
             </button>
             <button
               onClick={() => setSelectedLevel('intermediate')}
@@ -189,7 +185,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
               }`}
             >
               <span>🌿</span>
-              <span>Khu Intermediate (B1-B2)</span>
+              <span>Phòng Intermediate (B1-B2)</span>
             </button>
             <button
               onClick={() => setSelectedLevel('advance')}
@@ -200,7 +196,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
               }`}
             >
               <span>🌳</span>
-              <span>Khu Advance (C1-C2)</span>
+              <span>Phòng Advance (C1-C2)</span>
             </button>
           </div>
         </div>
@@ -252,7 +248,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
                   </div>
                   <div className="min-w-0">
                     <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider block">
-                      Leader Chủ Trì:
+                      Leader Chủ Trì (Host):
                     </span>
                     <p className="text-xs font-semibold text-slate-200 truncate">{room.leaderName}</p>
                   </div>

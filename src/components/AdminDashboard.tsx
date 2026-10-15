@@ -7,12 +7,9 @@ import {
   UserCheck,
   PlusCircle,
   Trash2,
-  Lock,
-  Unlock,
   CheckCircle,
   XCircle,
   Search,
-  Filter,
 } from 'lucide-react';
 import { ClubUser, EnglishRoom } from '../types';
 
@@ -67,7 +64,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               Quản Lý Hệ Thống CLB, Leaders & Học Phí
             </h1>
             <p className="text-xs sm:text-sm text-slate-300">
-              Kiểm soát toàn bộ các phòng học theo cấp độ, danh sách giáo viên chủ trì và trạng thái học viên.
+              Kiểm soát các phòng học phân cấp, phê duyệt quyền Leader và quản lý học phí học viên.
             </p>
           </div>
 
@@ -122,7 +119,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
       {/* Tabs Switcher & Search Bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        {/* Tab Buttons */}
         <div className="flex items-center bg-slate-900/80 p-1 rounded-xl border border-white/10 text-xs font-semibold">
           <button
             onClick={() => setActiveTab('rooms')}
@@ -150,7 +146,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </button>
         </div>
 
-        {/* Search */}
         <div className="relative">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
           <input
@@ -169,7 +164,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           <table className="w-full text-left text-xs text-slate-300">
             <thead>
               <tr className="border-b border-white/10 text-slate-400 font-semibold uppercase tracking-wider text-[10px]">
-                <th className="pb-3 px-3">Phòng Học & Cấp Độ</th>
+                <th className="pb-3 px-3">Phòng Học & Phân Cấp</th>
                 <th className="pb-3 px-3">Leader Chủ Trì</th>
                 <th className="pb-3 px-3">Học Viên</th>
                 <th className="pb-3 px-3">Trạng Thái</th>
@@ -235,7 +230,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         <div className="glass-panel rounded-2xl p-5 overflow-x-auto space-y-4">
           <div className="flex items-center justify-between text-xs text-slate-400 pb-2">
             <span>Danh sách những người có quyền duy nhất để mở phòng và điều hành lớp học.</span>
-            <span className="text-amber-400 font-bold">Chỉ Admin mới có thể phân quyền Leader</span>
+            <span className="text-amber-400 font-bold">Chỉ Admin mới có quyền phong Leader</span>
           </div>
 
           <table className="w-full text-left text-xs text-slate-300">
@@ -243,7 +238,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <tr className="border-b border-white/10 text-slate-400 font-semibold uppercase tracking-wider text-[10px]">
                 <th className="pb-3 px-3">Họ Và Tên</th>
                 <th className="pb-3 px-3">Email & SĐT</th>
-                <th className="pb-3 px-3">Cấp Độ Phụ Trách</th>
+                <th className="pb-3 px-3">Ngày Tham Gia</th>
                 <th className="pb-3 px-3">Vai Trò</th>
                 <th className="pb-3 px-3 text-right">Cấp / Hủy Quyền</th>
               </tr>
@@ -260,19 +255,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         </div>
                         <div>
                           <p className="font-bold text-white">{leader.name}</p>
-                          <span className="text-[10px] text-slate-400">Tham gia: {leader.joinDate}</span>
+                          <span className="text-[10px] text-slate-400">{leader.email}</span>
                         </div>
                       </div>
                     </td>
                     <td className="py-3 px-3 font-mono text-slate-400">
-                      <div>{leader.email}</div>
-                      <div className="text-[10px] text-slate-500">{leader.phone}</div>
+                      <div>{leader.phone || 'Chưa cập nhật'}</div>
                     </td>
-                    <td className="py-3 px-3">
-                      <span className="px-2 py-0.5 rounded bg-indigo-500/15 text-indigo-300 text-[10px] font-semibold border border-indigo-500/25 uppercase">
-                        {leader.level}
-                      </span>
-                    </td>
+                    <td className="py-3 px-3 text-slate-400">{leader.joinDate}</td>
                     <td className="py-3 px-3">
                       <span
                         className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
@@ -308,14 +298,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       {activeTab === 'students' && (
         <div className="glass-panel rounded-2xl p-5 overflow-x-auto space-y-4">
           <div className="flex items-center justify-between text-xs text-slate-400 pb-2">
-            <span>Danh sách học viên đăng ký, cấp độ tiếng Anh và tình trạng nộp học phí.</span>
+            <span>Danh sách học viên đăng ký và tình trạng nộp học phí CLB.</span>
           </div>
 
           <table className="w-full text-left text-xs text-slate-300">
             <thead>
               <tr className="border-b border-white/10 text-slate-400 font-semibold uppercase tracking-wider text-[10px]">
                 <th className="pb-3 px-3">Học Viên</th>
-                <th className="pb-3 px-3">Cấp Độ Phân Lớp</th>
+                <th className="pb-3 px-3">Số Điện Thoại</th>
                 <th className="pb-3 px-3">Học Phí CLB</th>
                 <th className="pb-3 px-3">Cấp Quyền Leader</th>
                 <th className="pb-3 px-3 text-right">Xác Nhận Học Phí</th>
@@ -337,10 +327,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-3">
-                      <span className="px-2 py-0.5 rounded bg-indigo-500/15 text-indigo-300 text-[10px] font-bold uppercase">
-                        {student.level}
-                      </span>
+                    <td className="py-3 px-3 font-mono text-slate-400">
+                      {student.phone || 'Chưa cập nhật'}
                     </td>
                     <td className="py-3 px-3">
                       {student.tuitionStatus === 'paid' ? (

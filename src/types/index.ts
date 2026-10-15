@@ -7,7 +7,6 @@ export interface ClubUser {
   name: string;
   email: string;
   role: UserRole;
-  level: EnglishLevel;
   tuitionStatus: TuitionStatus;
   avatarText: string;
   phone?: string;
@@ -41,7 +40,6 @@ export interface RoomParticipant {
   isCamOn: boolean;
   isMuted: boolean;
   isHandRaised: boolean;
-  speakingTimeSec?: number;
 }
 
 export interface ChatMessage {
@@ -57,4 +55,11 @@ export interface ToastMessage {
   id: number;
   text: string;
   type?: 'indigo' | 'emerald' | 'amber' | 'rose' | 'slate';
+}
+
+export interface FloatingEmoji {
+  id: number;
+  emoji: string;
+  x: number;
+  y: number;
 }

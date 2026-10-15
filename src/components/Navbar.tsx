@@ -40,12 +40,12 @@ export const Navbar: React.FC<NavbarProps> = ({
               </span>
             </div>
             <p className="text-[11px] text-slate-400 font-medium hidden sm:block">
-              Không gian luyện giao tiếp & phản xạ theo cấp độ
+              Không gian luyện phản xạ giao tiếp theo cấp độ phòng
             </p>
           </div>
         </div>
 
-        {/* Center View Navigation Switcher */}
+        {/* Center View Switcher */}
         <div className="flex items-center bg-slate-900/80 p-1 rounded-xl border border-white/10 text-xs font-semibold">
           <button
             onClick={() => onSwitchView('lobby')}
@@ -56,7 +56,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             <LayoutGrid className="w-3.5 h-3.5" />
-            <span>Phân Khu Level</span>
+            <span>Phân Cấp Phòng</span>
           </button>
 
           <button
@@ -75,7 +75,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span>Phòng Luyện Nói</span>
           </button>
 
-          {/* Admin Tab (Only for Admin) */}
+          {/* Admin Tab (Only when Admin is logged in) */}
           {currentUser.role === 'admin' && (
             <button
               onClick={() => onSwitchView('admin')}
@@ -91,9 +91,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
         </div>
 
-        {/* Right User Role & Actions */}
+        {/* Right User Actions */}
         <div className="flex items-center gap-3">
-          {/* Tuition / Member status badge */}
+          {/* Tuition Button for Students */}
           {currentUser.role === 'student' && (
             <button
               onClick={onOpenTuitionModal}
@@ -123,20 +123,22 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span>LEADER / CÔ GIÁO</span>
               </span>
             ) : (
-              <span className="text-indigo-400 font-semibold uppercase text-[10px]">
-                🎓 HỌC VIÊN: {currentUser.level}
+              <span className="text-indigo-400 font-semibold text-[11px]">
+                🎓 HỌC VIÊN CLB
               </span>
             )}
           </div>
 
-          {/* Switch Account Button */}
+          {/* Login / Switch Account Button */}
           <button
             onClick={onOpenLoginModal}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl glass-button text-xs font-semibold text-slate-200 hover:text-white cursor-pointer"
-            title="Đăng nhập hoặc đổi vai trò"
+            title="Đăng nhập hoặc đăng ký tài khoản"
           >
             <LogIn className="w-3.5 h-3.5 text-indigo-400" />
-            <span className="hidden sm:inline">Tài Khoản</span>
+            <span className="hidden sm:inline">
+              {currentUser.id === 'guest-user' ? 'Đăng Nhập' : 'Tài Khoản'}
+            </span>
           </button>
 
           {/* User Profile Avatar */}

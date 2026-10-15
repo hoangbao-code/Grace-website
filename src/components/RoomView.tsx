@@ -15,10 +15,11 @@ import {
   Plus,
   Send,
   Sparkles,
-  ShieldAlert,
   Crown,
+  PartyPopper,
 } from 'lucide-react';
-import { ChatMessage, ClubUser, EnglishRoom, RoomParticipant } from '../types';
+import confetti from 'canvas-confetti';
+import { ChatMessage, ClubUser, EnglishRoom, FloatingEmoji, RoomParticipant } from '../types';
 import { audioEngine } from '../services/audioService';
 
 interface RoomViewProps {
@@ -46,6 +47,9 @@ export const RoomView: React.FC<RoomViewProps> = ({
   const [copiedCode, setCopiedCode] = useState<boolean>(false);
   const [chatInput, setChatInput] = useState<string>('');
 
+  // Interactive In-Room Floating Emojis Animation
+  const [floatingEmojis, setFloatingEmojis] = useState<FloatingEmoji[]>([]);
+
   // Host Leader specific controls
   const isLeaderOrAdmin = currentUser.role === 'admin' || currentUser.id === room.leaderId;
   const [newVocabInput, setNewVocabInput] = useState<string>('');
@@ -57,7 +61,7 @@ export const RoomView: React.FC<RoomViewProps> = ({
   const chatEndRef = useRef<HTMLDivElement | null>(null);
 
   // Other participants in room
-  const [participants, setParticipants] = useState<RoomParticipant[]>([
+  const [participants] = useState<RoomParticipant[]>([
     {
       id: 'p-1',
       name: room.leaderName,
@@ -80,15 +84,6 @@ export const RoomView: React.FC<RoomViewProps> = ({
       id: 'p-3',
       name: 'Nguyễn Thu Hà',
       avatarText: 'TH',
-      role: 'student',
-      isCamOn: false,
-      isMuted: true,
-      isHandRaised: false,
-    },
-    {
-      id: 'p-4',
-      name: 'Phạm Mai Linh',
-      avatarText: 'ML',
       role: 'student',
       isCamOn: false,
       isMuted: true,
@@ -123,17 +118,52 @@ export const RoomView: React.FC<RoomViewProps> = ({
     }
   };
 
-  // Toggle Hand Raise
+  // Toggle Hand Raise with Animation
   const toggleHandRaise = () => {
     const next = !isHandRaised;
     setIsHandRaised(next);
     audioEngine.playPopSound();
-    onShowToast(
-      next
-        ? '✋ Đã giơ tay! Tên bạn đã được đưa lên danh sách chờ Cô giáo gọi phát biểu.'
-        : 'Đã hạ tay phát biểu.',
-      next ? 'amber' : 'slate'
-    );
+    if (next) {
+      triggerFloatingEmoji('✋');
+      onShowToast('✋ Đã giơ tay phát biểu!', 'amber');
+    } else {
+      onShowToast('Đã hạ tay.', 'slate');
+    }
+  };
+
+  // Floating Emoji Burst Trigger
+  const triggerFloatingEmoji = (emoji: string) => {
+    audioEngine.playPopSound();
+    const count = 4;
+    const newItems: FloatingEmoji[] = [];
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
+
+    for (let i = 0; i < count; i++) {
+      newItems.push({
+        id: Date.now() + i,
+        emoji,
+        x: Math.random() * (screenWidth * 0.6) + 50,
+        y: screenHeight - 140 + Math.random() * 30,
+      });
+    }
+
+    setFloatingEmojis((prev) => [...prev, ...newItems]);
+    setTimeout(() => {
+      setFloatingEmojis((prev) => prev.filter((item) => !newItems.some((n) => n.id === item.id)));
+    }, 2000);
+  };
+
+  // Applause with Confetti
+  const triggerApplause = () => {
+    audioEngine.playTaskVictory();
+    triggerFloatingEmoji('👏');
+    confetti({
+      particleCount: 70,
+      spread: 60,
+      origin: { y: 0.7 },
+    });
+    onShowToast('👏 Cả lớp cùng vỗ tay tán thưởng!', 'amber');
   };
 
   // Host: Mute All Students
@@ -149,6 +179,7 @@ export const RoomView: React.FC<RoomViewProps> = ({
     setVocabList((prev) => [newVocabInput.trim(), ...prev]);
     setNewVocabInput('');
     audioEngine.playTaskVictory();
+    triggerFloatingEmoji('📝');
     onShowToast('Đã ghim từ vựng mới lên bảng cho cả lớp!', 'emerald');
   };
 
@@ -173,10 +204,33 @@ export const RoomView: React.FC<RoomViewProps> = ({
   }, [chatMessages]);
 
   return (
-    <main className="flex-1 flex flex-col w-full h-[calc(100vh-65px)] overflow-hidden">
+    <main className="flex-1 flex flex-col w-full h-[calc(100vh-65px)] overflow-hidden relative">
+      {/* Floating Emojis Overlay */}
+      <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+        {floatingEmojis.map((item) => (
+          <span
+            key={item.id}
+            className="absolute select-none text-3xl animate-float-up"
+            style={{
+              left: `${item.x}px`,
+              top: `${item.y}px`,
+              animation: 'floatUp 1.8s ease-out forwards',
+            }}
+          >
+            {item.emoji}
+          </span>
+        ))}
+        <style>{`
+          @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0px) scale(0.8); }
+            50% { transform: translateY(-90px) scale(1.4) rotate(15deg); }
+            100% { opacity: 0; transform: translateY(-180px) scale(1.7) rotate(-15deg); }
+          }
+        `}</style>
+      </div>
+
       {/* Room Header Strip */}
       <section className="glass-panel border-b border-white/10 px-4 lg:px-6 py-2.5 flex items-center justify-between gap-4 z-20 flex-shrink-0">
-        {/* Left: Room Title & Level */}
         <div className="flex items-center gap-3">
           <button
             onClick={onBackToLobby}
@@ -210,28 +264,24 @@ export const RoomView: React.FC<RoomViewProps> = ({
           </div>
         </div>
 
-        {/* Center: Leader Host Badge or Topic */}
+        {/* Center: Topic summary */}
         <div className="hidden md:flex items-center gap-2 bg-slate-950/70 px-4 py-1.5 rounded-xl border border-white/10">
           <span className="text-xs text-slate-400 font-semibold">Chủ đề:</span>
-          <span className="text-xs text-white font-bold max-w-xs truncate">
-            {room.topic}
-          </span>
+          <span className="text-xs text-white font-bold max-w-xs truncate">{room.topic}</span>
         </div>
 
-        {/* Right: Leader Special Host Controls */}
+        {/* Right: Leader Mute All & Raise Hand */}
         <div className="flex items-center gap-2">
           {isLeaderOrAdmin && (
             <button
               onClick={handleHostMuteAll}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold transition-all cursor-pointer"
-              title="Tắt mic toàn bộ học viên trong phòng"
             >
               <VolumeX className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Tắt Mic Cả Lớp</span>
             </button>
           )}
 
-          {/* Student Raise Hand Button */}
           <button
             onClick={toggleHandRaise}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
@@ -248,10 +298,10 @@ export const RoomView: React.FC<RoomViewProps> = ({
 
       {/* Main Room Body */}
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Left: Video Grid (Host + Students) */}
+        {/* Left: Video Grid */}
         <div className="flex-1 flex flex-col p-4 lg:p-6 overflow-y-auto space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 flex-1">
-            {/* Host Leader Video Card (Big Spotlight) */}
+            {/* Host Leader Video Card */}
             <div className="glass-panel rounded-2xl p-4 flex flex-col justify-between relative overflow-hidden min-h-[220px] border-2 border-amber-500/50 shadow-xl bg-gradient-to-br from-amber-950/20 to-slate-950">
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div className="w-24 h-24 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-600 p-1 shadow-2xl">
@@ -261,7 +311,6 @@ export const RoomView: React.FC<RoomViewProps> = ({
                 </div>
               </div>
 
-              {/* Host Tag */}
               <div className="relative z-10 flex items-center justify-between">
                 <span className="text-[10px] px-2.5 py-1 rounded-full bg-amber-500 text-slate-950 font-extrabold flex items-center gap-1">
                   <Crown className="w-3 h-3 fill-current" />
@@ -272,7 +321,6 @@ export const RoomView: React.FC<RoomViewProps> = ({
                 </span>
               </div>
 
-              {/* Host Info */}
               <div className="relative z-10 bg-slate-950/80 backdrop-blur-md p-2.5 rounded-xl border border-white/10 flex items-center justify-between">
                 <div>
                   <p className="text-xs font-bold text-white">{room.leaderName}</p>
@@ -326,7 +374,7 @@ export const RoomView: React.FC<RoomViewProps> = ({
               <div className="relative z-10 bg-slate-950/80 backdrop-blur-md p-2.5 rounded-xl border border-white/10 flex items-center justify-between">
                 <div>
                   <span className="text-xs font-bold text-white">{currentUser.name} (Bạn)</span>
-                  <p className="text-[10px] text-slate-400">Học viên cấp độ {currentUser.level}</p>
+                  <p className="text-[10px] text-slate-400">Thành viên lớp học</p>
                 </div>
                 {isMicMuted ? (
                   <MicOff className="w-3.5 h-3.5 text-rose-400" />
@@ -373,15 +421,41 @@ export const RoomView: React.FC<RoomViewProps> = ({
               ))}
           </div>
 
-          {/* Bottom Call Controls Dock */}
-          <div className="glass-panel p-3 rounded-2xl flex items-center justify-between gap-3">
+          {/* Animated Reaction Bar & Controls Dock */}
+          <div className="glass-panel p-3 rounded-2xl flex flex-wrap items-center justify-between gap-3">
+            {/* Reaction Emoji Buttons */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+              <span className="text-xs text-slate-400 font-semibold px-1 whitespace-nowrap hidden sm:inline">
+                Cảm xúc:
+              </span>
+              {['👏', '🔥', '❤️', '💡', '💯', '🇬🇧'].map((emoji) => (
+                <button
+                  key={emoji}
+                  onClick={() => triggerFloatingEmoji(emoji)}
+                  className="w-9 h-9 rounded-xl glass-button text-base flex items-center justify-center hover:scale-125 transition-transform active:scale-95 cursor-pointer"
+                >
+                  {emoji}
+                </button>
+              ))}
+
+              <button
+                onClick={triggerApplause}
+                className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/35 border border-amber-500/40 text-amber-300 text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+                title="Bắn pháo hoa tán thưởng bài phát biểu"
+              >
+                <PartyPopper className="w-3.5 h-3.5 text-amber-400" />
+                <span>Vỗ Tay Tán Thưởng</span>
+              </button>
+            </div>
+
+            {/* Mic / Cam / Leave Controls */}
             <div className="flex items-center gap-2">
               <button
                 onClick={() => {
                   setIsMicMuted(!isMicMuted);
                   onShowToast(isMicMuted ? 'Đã bật micro phát biểu' : 'Đã tắt micro', 'indigo');
                 }}
-                className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                   isMicMuted ? 'glass-button text-slate-400' : 'bg-emerald-600 text-white shadow-lg'
                 }`}
               >
@@ -391,37 +465,26 @@ export const RoomView: React.FC<RoomViewProps> = ({
 
               <button
                 onClick={toggleCamera}
-                className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                   isCamOn ? 'bg-indigo-600 text-white shadow-lg' : 'glass-button text-slate-400'
                 }`}
               >
                 {isCamOn ? <VideoIcon className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
-                <span>{isCamOn ? 'Tắt Cam' : 'Bật Camera'}</span>
+                <span>{isCamOn ? 'Tắt Cam' : 'Bật Cam'}</span>
               </button>
 
               <button
-                onClick={toggleHandRaise}
-                className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
-                  isHandRaised ? 'bg-amber-500 text-slate-950 font-extrabold' : 'glass-button text-slate-300'
-                }`}
+                onClick={onBackToLobby}
+                className="px-3.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-xs font-bold transition-all cursor-pointer"
               >
-                <Hand className="w-4 h-4" />
-                <span>{isHandRaised ? 'Hạ Tay' : 'Giơ Tay ✋'}</span>
+                Rời Lớp
               </button>
             </div>
-
-            <button
-              onClick={onBackToLobby}
-              className="px-4 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-xs font-bold transition-all cursor-pointer"
-            >
-              Rời Lớp Học
-            </button>
           </div>
         </div>
 
         {/* Right: English Room Sidebar (Vocab Board / Chat / Topic Guide) */}
         <aside className="w-80 lg:w-96 glass-panel border-l border-white/10 flex flex-col h-full flex-shrink-0">
-          {/* Tabs selector */}
           <div className="p-3 border-b border-white/10 flex items-center gap-1 bg-slate-950/40">
             <button
               onClick={() => setActiveTab('vocab')}
@@ -456,20 +519,17 @@ export const RoomView: React.FC<RoomViewProps> = ({
           {activeTab === 'vocab' && (
             <div className="flex-1 flex flex-col p-4 overflow-hidden">
               <div className="flex items-center justify-between text-xs mb-3">
-                <span className="font-bold text-white flex items-center gap-1">
-                  <span>📝 Từ Vựng & Cụm Từ Cô Ghim</span>
-                </span>
-                <span className="text-amber-400 font-mono text-[11px]">{vocabList.length} từ mới</span>
+                <span className="font-bold text-white">📝 Từ Vựng Được Cô Ghim:</span>
+                <span className="text-amber-400 font-mono text-[11px]">{vocabList.length} từ</span>
               </div>
 
-              {/* Host pin new word input */}
               {isLeaderOrAdmin && (
                 <form onSubmit={handleAddVocab} className="mb-3 flex gap-2">
                   <input
                     type="text"
                     value={newVocabInput}
                     onChange={(e) => setNewVocabInput(e.target.value)}
-                    placeholder="Cô ghim từ mới (VD: Breathtaking: Đẹp)..."
+                    placeholder="Cô ghim từ mới (VD: Fluency: Độ trôi chảy)..."
                     className="flex-1 px-3 py-2 rounded-xl bg-slate-950 border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
                   />
                   <button
@@ -481,7 +541,6 @@ export const RoomView: React.FC<RoomViewProps> = ({
                 </form>
               )}
 
-              {/* Vocab items */}
               <div className="flex-1 overflow-y-auto space-y-2 pr-1">
                 {vocabList.map((item, idx) => (
                   <div
@@ -523,7 +582,6 @@ export const RoomView: React.FC<RoomViewProps> = ({
                 <div ref={chatEndRef} />
               </div>
 
-              {/* Chat Input */}
               <form onSubmit={handleSendChat} className="mt-3 pt-3 border-t border-white/10 flex gap-2">
                 <input
                   type="text"
@@ -551,20 +609,16 @@ export const RoomView: React.FC<RoomViewProps> = ({
                   <span>Câu Hỏi Gợi Ý Cho Buổi Thảo Luận:</span>
                 </h4>
                 <div className="space-y-2 text-[11px] text-slate-300 leading-relaxed">
-                  <div className="p-2 rounded-lg bg-black/40 border border-white/5">
-                    <strong>1.</strong> Can you describe the most memorable trip you have ever had?
+                  <div className="p-2.5 rounded-lg bg-black/40 border border-white/5">
+                    <strong>1.</strong> Can you introduce yourself and your English goals?
                   </div>
-                  <div className="p-2 rounded-lg bg-black/40 border border-white/5">
-                    <strong>2.</strong> What is your dream country to visit and why?
+                  <div className="p-2.5 rounded-lg bg-black/40 border border-white/5">
+                    <strong>2.</strong> What do you find most challenging when speaking English?
                   </div>
-                  <div className="p-2 rounded-lg bg-black/40 border border-white/5">
-                    <strong>3.</strong> Have you ever experienced culture shock? How did you feel?
+                  <div className="p-2.5 rounded-lg bg-black/40 border border-white/5">
+                    <strong>3.</strong> How do you practice English every day?
                   </div>
                 </div>
-              </div>
-
-              <div className="bg-indigo-950/30 p-3 rounded-xl border border-indigo-500/20 text-[11px] text-indigo-300 leading-relaxed">
-                💡 <strong>Mẹo luyện phản xạ:</strong> Đừng sợ nói sai ngữ pháp! Cứ mạnh dạn ghép các từ vựng Cô vừa ghim vào câu nói của mình nhé.
               </div>
             </div>
           )}

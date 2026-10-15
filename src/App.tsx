@@ -7,14 +7,14 @@ import { LoginModal } from './components/LoginModal';
 import { TuitionModal } from './components/TuitionModal';
 import { CreateRoomModal } from './components/CreateRoomModal';
 import { ToastContainer } from './components/ToastContainer';
-import { INITIAL_ROOMS, INITIAL_USERS } from './data/mockData';
-import { ChatMessage, ClubUser, EnglishLevel, EnglishRoom, ToastMessage } from './types';
+import { INITIAL_ROOMS, INITIAL_USERS, DEFAULT_GUEST_USER } from './data/mockData';
+import { ChatMessage, ClubUser, EnglishRoom, ToastMessage } from './types';
 
 export default function App() {
-  // Global State
+  // Global State - Default to clean student/guest interface for first-time visitors
   const [currentView, setCurrentView] = useState<'lobby' | 'room' | 'admin'>('lobby');
   const [users, setUsers] = useState<ClubUser[]>(INITIAL_USERS);
-  const [currentUser, setCurrentUser] = useState<ClubUser>(INITIAL_USERS[0]); // Defaults to Admin Bảo
+  const [currentUser, setCurrentUser] = useState<ClubUser>(DEFAULT_GUEST_USER);
   const [rooms, setRooms] = useState<EnglishRoom[]>(INITIAL_ROOMS);
   const [currentRoom, setCurrentRoom] = useState<EnglishRoom>(INITIAL_ROOMS[0]);
 
@@ -22,7 +22,7 @@ export default function App() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     { id: 1, sender: 'Hệ Thống', text: 'Chào mừng bạn đến với phòng luyện nói CLB Tiếng Anh!', time: '19:30', isSystem: true },
     { id: 2, sender: 'Cô Hoàng Lan Anh', text: 'Hello everyone! Please raise your hand if you want to answer question 1.', time: '19:32' },
-    { id: 3, sender: 'Trần Quốc Huy', text: 'Cô ơi cho em hỏi từ "Delicacy" nhấn trọng âm ở đâu ạ?', time: '19:35' },
+    { id: 3, sender: 'Bạn Học Viên', text: 'Cô ơi cho em hỏi từ "Delicacy" nhấn trọng âm ở đâu ạ?', time: '19:35' },
   ]);
 
   // Modals & Toasts
@@ -83,18 +83,7 @@ export default function App() {
   };
 
   // Register New Student
-  const handleRegisterUser = (name: string, email: string, level: EnglishLevel) => {
-    const newUser: ClubUser = {
-      id: `user-${Date.now()}`,
-      name,
-      email,
-      role: 'student',
-      level,
-      tuitionStatus: 'trial',
-      avatarText: name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase(),
-      joinDate: new Date().toLocaleDateString('vi-VN'),
-      streakDays: 1,
-    };
+  const handleRegisterUser = (newUser: ClubUser) => {
     setUsers((prev) => [...prev, newUser]);
     setCurrentUser(newUser);
   };
@@ -173,8 +162,8 @@ export default function App() {
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
         users={users}
-        onSelectUser={(u) => setCurrentUser(u)}
-        onRegisterUser={handleRegisterUser}
+        onLoginSuccess={(u) => setCurrentUser(u)}
+        onRegisterSuccess={handleRegisterUser}
         onShowToast={showToast}
       />
 
