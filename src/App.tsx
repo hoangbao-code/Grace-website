@@ -19,7 +19,7 @@ export default function App() {
   // Quản lý Users (Lưu vào localStorage để Admin xóa/thêm không bị reset)
   const [users, setUsers] = useState<ClubUser[]>(() => {
     try {
-      const saved = localStorage.getItem('fluently_users');
+      const saved = localStorage.getItem('fluently_clean_users_v1');
       if (saved) {
         return JSON.parse(saved);
       }
@@ -45,7 +45,9 @@ export default function App() {
   // Quản lý Rooms (Lưu vào localStorage để Admin xóa/thêm không bị reset)
   const [rooms, setRooms] = useState<EnglishRoom[]>(() => {
     try {
-      const saved = localStorage.getItem('fluently_rooms');
+      // Dọn dẹp cache cũ của các phiên trước nếu có
+      localStorage.removeItem('fluently_rooms');
+      const saved = localStorage.getItem('fluently_clean_rooms_v1');
       if (saved) {
         return JSON.parse(saved);
       }
@@ -55,7 +57,7 @@ export default function App() {
     return INITIAL_ROOMS;
   });
 
-  const [currentRoom, setCurrentRoom] = useState<EnglishRoom>(INITIAL_ROOMS[0]);
+  const [currentRoom, setCurrentRoom] = useState<EnglishRoom | null>(null);
 
   // Modals & Profile
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
@@ -102,7 +104,7 @@ export default function App() {
     setRooms((prev) => {
       const updated = [newRoom, ...prev];
       try {
-        localStorage.setItem('fluently_rooms', JSON.stringify(updated));
+        localStorage.setItem('fluently_clean_rooms_v1', JSON.stringify(updated));
       } catch (e) {
         console.error(e);
       }
@@ -117,13 +119,14 @@ export default function App() {
     setRooms((prev) => {
       const updated = prev.filter((r) => r.id !== roomId);
       try {
-        localStorage.setItem('fluently_rooms', JSON.stringify(updated));
+        localStorage.setItem('fluently_clean_rooms_v1', JSON.stringify(updated));
       } catch (e) {
         console.error(e);
       }
       return updated;
     });
     if (currentRoom?.id === roomId) {
+      setCurrentRoom(null);
       setCurrentView('lobby');
     }
     showToast('Đã xóa phòng học thành công!', 'rose');
@@ -138,7 +141,7 @@ export default function App() {
     setUsers((prev) => {
       const updated = prev.filter((u) => u.id !== userId);
       try {
-        localStorage.setItem('fluently_users', JSON.stringify(updated));
+        localStorage.setItem('fluently_clean_users_v1', JSON.stringify(updated));
       } catch (e) {
         console.error(e);
       }
@@ -152,7 +155,7 @@ export default function App() {
     setUsers((prev) => {
       const updated = [...prev, newUser];
       try {
-        localStorage.setItem('fluently_users', JSON.stringify(updated));
+        localStorage.setItem('fluently_clean_users_v1', JSON.stringify(updated));
       } catch (e) {
         console.error(e);
       }
@@ -166,7 +169,7 @@ export default function App() {
     setUsers((prev) => {
       const updated = prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u));
       try {
-        localStorage.setItem('fluently_users', JSON.stringify(updated));
+        localStorage.setItem('fluently_clean_users_v1', JSON.stringify(updated));
       } catch (e) {
         console.error(e);
       }
@@ -184,7 +187,7 @@ export default function App() {
     setUsers((prev) => {
       const updated = prev.map((u) => (u.id === userId ? { ...u, tuitionStatus: newStatus } : u));
       try {
-        localStorage.setItem('fluently_users', JSON.stringify(updated));
+        localStorage.setItem('fluently_clean_users_v1', JSON.stringify(updated));
       } catch (e) {
         console.error(e);
       }
@@ -302,7 +305,7 @@ export default function App() {
             onDeleteRoom={handleDeleteRoom}
             onShowToast={showToast}
           />
-        ) : currentView === 'room' ? (
+        ) : currentView === 'room' && currentRoom ? (
           /* PHÒNG LUYỆN NÓI */
           <RoomView
             room={currentRoom}
