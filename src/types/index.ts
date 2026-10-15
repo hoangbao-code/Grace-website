@@ -1,99 +1,60 @@
-export interface UserProfile {
-  name: string;
-  avatarText: string;
-  level: number;
-  xp: number;
-  maxXp: number;
-  personalStreak: number;
-  squadStreak: number;
-  isPro: boolean;
-  todayMinutes: number;
-  goalMinutes: number;
-}
+export type UserRole = 'admin' | 'leader' | 'student';
+export type EnglishLevel = 'newbie' | 'intermediate' | 'advance';
+export type TuitionStatus = 'paid' | 'unpaid' | 'trial';
 
-export interface DayRecord {
-  day: number;
-  hours: number;
-  level: 0 | 1 | 2 | 3 | 4; // intensity for heatmap
-  note?: string;
-  completed: boolean;
-  isToday?: boolean;
-}
-
-export interface SquadMember {
+export interface ClubUser {
   id: string;
   name: string;
+  email: string;
+  role: UserRole;
+  level: EnglishLevel;
+  tuitionStatus: TuitionStatus;
   avatarText: string;
-  status: string;
-  isOnline: boolean;
-  streak: number;
-  isSelf?: boolean;
-  needsNudge?: boolean;
+  phone?: string;
+  joinDate: string;
+  streakDays: number;
 }
 
-export interface StudyRoom {
+export interface EnglishRoom {
   id: string;
   title: string;
-  tag: 'silent' | 'tech' | 'language' | 'vip' | 'general';
-  tagLabel: string;
+  level: EnglishLevel;
+  levelLabel: string;
+  leaderId: string;
+  leaderName: string;
+  leaderAvatar: string;
+  topic: string;
   code: string;
   membersCount: number;
   maxMembers: number;
-  isVip?: boolean;
+  isLive: boolean;
+  vocabList: string[];
   activeAvatars: string[];
-  currentPomodoro?: string;
+  scheduledTime?: string;
 }
 
-export interface Participant {
+export interface RoomParticipant {
   id: string;
   name: string;
   avatarText: string;
-  bgColor: string;
-  borderColor: string;
+  role: UserRole;
   isCamOn: boolean;
   isMuted: boolean;
-  mood: string;
-  statusText: string;
-  isSelf?: boolean;
-  isPro?: boolean;
-  hasAudioWave?: boolean;
-}
-
-export interface TodoItem {
-  id: number;
-  text: string;
-  completed: boolean;
-  createdAt: number;
+  isHandRaised: boolean;
+  speakingTimeSec?: number;
 }
 
 export interface ChatMessage {
   id: number;
   sender: string;
+  role?: UserRole;
   text: string;
   time: string;
   isSystem?: boolean;
-}
-
-export interface MusicTrack {
-  id: string;
-  title: string;
-  artist: string;
-  duration: string;
-  category: string;
-  youtubeId: string;
-  thumbnailUrl: string;
 }
 
 export interface ToastMessage {
   id: number;
   text: string;
   type?: 'indigo' | 'emerald' | 'amber' | 'rose' | 'slate';
-}
-
-export interface FloatingEmoji {
-  id: number;
-  emoji: string;
-  x: number;
-  y: number;
-  size: number;
 }

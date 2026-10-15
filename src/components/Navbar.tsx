@@ -1,24 +1,22 @@
 import React from 'react';
-import { LayoutGrid, Video, Music, Crown, Zap, Flame } from 'lucide-react';
-import { UserProfile } from '../types';
+import { LayoutGrid, Video, ShieldAlert, LogIn, Crown, UserCheck } from 'lucide-react';
+import { ClubUser } from '../types';
 
 interface NavbarProps {
-  currentView: 'lobby' | 'room';
-  onSwitchView: (view: 'lobby' | 'room') => void;
-  user: UserProfile;
-  onOpenProModal: () => void;
-  onOpenAudioHub: () => void;
+  currentView: 'lobby' | 'room' | 'admin';
+  onSwitchView: (view: 'lobby' | 'room' | 'admin') => void;
+  currentUser: ClubUser;
+  onOpenLoginModal: () => void;
+  onOpenTuitionModal: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   currentView,
   onSwitchView,
-  user,
-  onOpenProModal,
-  onOpenAudioHub,
+  currentUser,
+  onOpenLoginModal,
+  onOpenTuitionModal,
 }) => {
-  const xpPercent = Math.min(100, Math.round((user.xp / user.maxXp) * 100));
-
   return (
     <header className="sticky top-0 z-40 glass-panel border-b border-white/10 px-4 lg:px-8 py-3 transition-all duration-300">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
@@ -29,20 +27,20 @@ export const Navbar: React.FC<NavbarProps> = ({
         >
           <div className="relative w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 via-indigo-600 to-emerald-400 p-[1.5px] shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
             <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-              <span className="text-lg">🔥</span>
+              <span className="text-lg">🇬🇧</span>
             </div>
           </div>
           <div>
             <div className="flex items-center gap-2">
               <span className="font-extrabold text-base md:text-lg tracking-tight bg-gradient-to-r from-white via-slate-100 to-indigo-200 bg-clip-text text-transparent">
-                100-DAY MASTERY
+                GRACE ENGLISH CLUB
               </span>
               <span className="text-[10px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                CLUB
+                CLB TIẾNG ANH
               </span>
             </div>
             <p className="text-[11px] text-slate-400 font-medium hidden sm:block">
-              Không gian học tập & Co-working ảo
+              Không gian luyện giao tiếp & phản xạ theo cấp độ
             </p>
           </div>
         </div>
@@ -58,8 +56,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             <LayoutGrid className="w-3.5 h-3.5" />
-            <span>Sảnh Chung (Lobby)</span>
+            <span>Phân Khu Level</span>
           </button>
+
           <button
             onClick={() => onSwitchView('room')}
             className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg transition-all relative cursor-pointer ${
@@ -73,93 +72,90 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
             <Video className="w-3.5 h-3.5" />
-            <span>Phòng Đang Học</span>
+            <span>Phòng Luyện Nói</span>
           </button>
+
+          {/* Admin Tab (Only for Admin) */}
+          {currentUser.role === 'admin' && (
+            <button
+              onClick={() => onSwitchView('admin')}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg transition-all cursor-pointer ${
+                currentView === 'admin'
+                  ? 'bg-purple-600 text-white shadow-md shadow-purple-500/25'
+                  : 'text-purple-300 hover:text-white'
+              }`}
+            >
+              <ShieldAlert className="w-3.5 h-3.5" />
+              <span>Quản Trị Admin</span>
+            </button>
+          )}
         </div>
 
-        {/* Right User Stats & Upgrade CTA */}
+        {/* Right User Role & Actions */}
         <div className="flex items-center gap-3">
-          {/* XP Bar & Level */}
-          <div className="hidden md:flex flex-col items-end pr-2 border-r border-white/10">
-            <div className="flex items-center gap-1.5 text-xs font-bold">
-              <span className="text-amber-400 flex items-center gap-0.5">
-                <Zap className="w-3.5 h-3.5 fill-current" />
-                Lv.{user.level}
+          {/* Tuition / Member status badge */}
+          {currentUser.role === 'student' && (
+            <button
+              onClick={onOpenTuitionModal}
+              className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-md cursor-pointer transition-all active:scale-95 ${
+                currentUser.tuitionStatus === 'paid'
+                  ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-300'
+                  : 'bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:border-amber-400'
+              }`}
+            >
+              <Crown className="w-3.5 h-3.5 fill-current" />
+              <span>
+                {currentUser.tuitionStatus === 'paid' ? 'Đã Nộp Học Phí' : 'Nộp Học Phí CLB'}
               </span>
-              <span className="text-slate-400 font-normal">|</span>
-              <span className="text-slate-200">{user.xp.toLocaleString()}</span>
-              <span className="text-slate-400 text-[10px]">/ {user.maxXp.toLocaleString()} XP</span>
-              <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-1 rounded border border-emerald-500/20">
-                +2 XP/m
+            </button>
+          )}
+
+          {/* Role Pill Indicator */}
+          <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-900 border border-white/10 text-xs">
+            {currentUser.role === 'admin' ? (
+              <span className="text-purple-400 font-extrabold flex items-center gap-1">
+                <ShieldAlert className="w-3.5 h-3.5" />
+                <span>ADMIN BẢO</span>
               </span>
-            </div>
-            <div className="w-28 h-1.5 bg-slate-800 rounded-full mt-1 overflow-hidden border border-white/5">
-              <div
-                className="h-full bg-gradient-to-r from-amber-500 to-emerald-400 rounded-full transition-all duration-500"
-                style={{ width: `${xpPercent}%` }}
-              ></div>
-            </div>
+            ) : currentUser.role === 'leader' ? (
+              <span className="text-amber-400 font-extrabold flex items-center gap-1">
+                <UserCheck className="w-3.5 h-3.5" />
+                <span>LEADER / CÔ GIÁO</span>
+              </span>
+            ) : (
+              <span className="text-indigo-400 font-semibold uppercase text-[10px]">
+                🎓 HỌC VIÊN: {currentUser.level}
+              </span>
+            )}
           </div>
 
-          {/* Streak Badges */}
-          <div className="flex items-center gap-1.5">
-            <div
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-orange-500/15 border border-orange-500/30 text-orange-300 text-xs font-bold"
-              title="Chuỗi kỷ luật cá nhân"
-            >
-              <Flame className="w-3.5 h-3.5 fill-current text-orange-400" />
-              <span>{user.personalStreak}</span>
-              <span className="text-[10px] text-orange-400/80 font-normal hidden sm:inline">/100</span>
-            </div>
-            <div
-              className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-xs font-bold"
-              title="Chuỗi đồng đội Biệt đội"
-            >
-              <Zap className="w-3.5 h-3.5 text-indigo-400" />
-              <span>{user.squadStreak}</span>
-              <span className="text-[10px] text-indigo-400/80 font-normal">ngày</span>
-            </div>
-          </div>
-
-          {/* VIP Pro Badge Button */}
+          {/* Switch Account Button */}
           <button
-            onClick={onOpenProModal}
-            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold shadow-md transition-all cursor-pointer active:scale-95 ${
-              user.isPro
-                ? 'bg-gradient-to-r from-amber-500 to-purple-600 text-slate-950 shadow-amber-500/30 ring-2 ring-amber-400/50'
-                : 'bg-amber-500/15 border border-amber-500/30 hover:border-amber-400 text-amber-300'
-            }`}
-            title="Mở khóa gói Mastery Pro & VIP Dragon"
+            onClick={onOpenLoginModal}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl glass-button text-xs font-semibold text-slate-200 hover:text-white cursor-pointer"
+            title="Đăng nhập hoặc đổi vai trò"
           >
-            <Crown className="w-3.5 h-3.5 fill-current" />
-            <span className="hidden sm:inline">
-              {user.isPro ? 'VIP PRO ACTIVE' : 'Nâng cấp Pro'}
-            </span>
-          </button>
-
-          {/* Focus Audio Hub Button */}
-          <button
-            onClick={onOpenAudioHub}
-            className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-violet-600 via-indigo-600 to-pink-600 hover:from-violet-500 hover:to-pink-500 text-white font-bold text-xs shadow-lg shadow-indigo-500/30 border border-indigo-400/40 transition-all relative group cursor-pointer active:scale-95 ring-2 ring-indigo-500/30"
-            title="Mở Trạm Tìm Kiếm Nhạc YouTube, Spotify & Âm Thanh Tập Trung"
-          >
-            <span className="relative flex items-center justify-center">
-              <Music className="w-4 h-4 text-white fill-current animate-bounce" />
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping absolute -top-1 -right-1"></span>
-            </span>
-            <span className="font-extrabold flex items-center gap-1">
-              <span>🎵 Chọn & Tìm Nhạc</span>
-            </span>
-            <span className="text-[9px] px-1.5 py-0.5 rounded bg-black/40 text-amber-300 font-mono hidden sm:inline border border-amber-400/30">
-              YOUTUBE/SPOTIFY
-            </span>
+            <LogIn className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="hidden sm:inline">Tài Khoản</span>
           </button>
 
           {/* User Profile Avatar */}
-          <div className="relative cursor-pointer">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-violet-600 to-indigo-500 p-[1.5px] relative">
+          <div
+            className="relative cursor-pointer"
+            onClick={onOpenLoginModal}
+            title={`${currentUser.name} (${currentUser.role})`}
+          >
+            <div
+              className={`w-8 h-8 rounded-lg p-[1.5px] relative ${
+                currentUser.role === 'admin'
+                  ? 'bg-gradient-to-tr from-purple-500 to-indigo-500'
+                  : currentUser.role === 'leader'
+                  ? 'bg-gradient-to-tr from-amber-500 to-orange-500'
+                  : 'bg-gradient-to-tr from-violet-600 to-indigo-500'
+              }`}
+            >
               <div className="w-full h-full bg-slate-900 rounded-[7px] flex items-center justify-center text-xs font-bold text-white">
-                {user.avatarText}
+                {currentUser.avatarText}
               </div>
               <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-slate-950"></span>
             </div>
