@@ -1,15 +1,14 @@
 import React from 'react';
-import { LayoutGrid, ShieldAlert, LogIn, LogOut, Crown, UserCheck, Sparkles, User } from 'lucide-react';
+import { LayoutGrid, ShieldAlert, LogIn, LogOut, Crown, UserCheck, Sparkles, Video } from 'lucide-react';
 import { ClubUser } from '../types';
 import { Logo } from './Logo';
 
 interface NavbarProps {
-  currentView: 'lobby' | 'room' | 'admin';
-  onSwitchView: (view: 'lobby' | 'room' | 'admin') => void;
+  currentView: 'intro' | 'lobby' | 'room' | 'admin';
+  onSwitchView: (view: 'intro' | 'lobby' | 'room' | 'admin') => void;
   currentUser: ClubUser;
   onOpenLoginModal: () => void;
   onOpenTuitionModal: () => void;
-  onOpenAboutModal: () => void;
   onOpenProfileModal: (user: ClubUser) => void;
   onLogout: () => void;
 }
@@ -20,7 +19,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   currentUser,
   onOpenLoginModal,
   onOpenTuitionModal,
-  onOpenAboutModal,
   onOpenProfileModal,
   onLogout,
 }) => {
@@ -32,15 +30,28 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Left: Brand Logo & Name */}
         <div
           className="flex items-center cursor-pointer group"
-          onClick={() => onSwitchView('lobby')}
+          onClick={() => onSwitchView('intro')}
           title="Trang chủ GraceSpeak Club"
         >
           <Logo size="md" showText={true} />
         </div>
 
-        {/* Center Navigation Links (Clean & Spacious - Replaces the old pill selector) */}
+        {/* Center Navigation Links: Trang Giới Thiệu & Sảnh Phòng Học */}
         <nav className="hidden md:flex items-center gap-1.5 bg-slate-900/60 p-1.5 rounded-2xl border border-white/10 text-xs font-semibold">
-          {/* Lobby Button */}
+          {/* Intro Tab */}
+          <button
+            onClick={() => onSwitchView('intro')}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer ${
+              currentView === 'intro'
+                ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-indigo-500/25'
+                : 'text-slate-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <Sparkles className="w-4 h-4 text-cyan-400" />
+            <span>Giới Thiệu CLB</span>
+          </button>
+
+          {/* Lobby Tab */}
           <button
             onClick={() => onSwitchView('lobby')}
             className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer ${
@@ -51,15 +62,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <LayoutGrid className="w-4 h-4" />
             <span>Sảnh Phòng Học</span>
-          </button>
-
-          {/* About Club Button */}
-          <button
-            onClick={onOpenAboutModal}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
-          >
-            <Sparkles className="w-4 h-4 text-cyan-400" />
-            <span>Giới Thiệu CLB</span>
           </button>
 
           {/* Admin Dashboard Tab (Visible when Admin is logged in) */}
@@ -79,13 +81,17 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* In-room status badge if currently attending a room */}
           {currentView === 'room' && (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300">
+            <button
+              onClick={() => onSwitchView('room')}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 cursor-pointer"
+            >
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
+              <Video className="w-3.5 h-3.5" />
               <span>Đang Trong Phòng</span>
-            </div>
+            </button>
           )}
         </nav>
 
@@ -108,13 +114,13 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
 
-          {/* Mobile About Button */}
+          {/* Mobile Lobby Shortcut */}
           <button
-            onClick={onOpenAboutModal}
+            onClick={() => onSwitchView(currentView === 'intro' ? 'lobby' : 'intro')}
             className="md:hidden p-2 rounded-xl glass-button text-slate-300 hover:text-white cursor-pointer"
-            title="Giới thiệu CLB"
+            title="Chuyển đổi Giới thiệu / Sảnh học"
           >
-            <Sparkles className="w-4 h-4 text-cyan-400" />
+            {currentView === 'intro' ? <LayoutGrid className="w-4 h-4 text-cyan-400" /> : <Sparkles className="w-4 h-4 text-indigo-400" />}
           </button>
 
           {/* Auth State Handling */}

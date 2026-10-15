@@ -1,20 +1,20 @@
 import { useState } from 'react';
 import { Navbar } from './components/Navbar';
+import { IntroView } from './components/IntroView';
 import { LobbyView } from './components/LobbyView';
 import { RoomView } from './components/RoomView';
 import { AdminDashboard } from './components/AdminDashboard';
 import { LoginModal } from './components/LoginModal';
 import { TuitionModal } from './components/TuitionModal';
 import { CreateRoomModal } from './components/CreateRoomModal';
-import { AboutModal } from './components/AboutModal';
 import { UserProfileModal } from './components/UserProfileModal';
 import { ToastContainer } from './components/ToastContainer';
 import { INITIAL_ROOMS, INITIAL_USERS, DEFAULT_GUEST_USER } from './data/mockData';
 import { ChatMessage, ClubUser, EnglishRoom, ToastMessage } from './types';
 
 export default function App() {
-  // Global State - Default to clean student/guest interface for first-time visitors
-  const [currentView, setCurrentView] = useState<'lobby' | 'room' | 'admin'>('lobby');
+  // Global State - Default to 'intro' landing page when first entering
+  const [currentView, setCurrentView] = useState<'intro' | 'lobby' | 'room' | 'admin'>('intro');
   const [users, setUsers] = useState<ClubUser[]>(INITIAL_USERS);
   const [currentUser, setCurrentUser] = useState<ClubUser>(DEFAULT_GUEST_USER);
   const [rooms, setRooms] = useState<EnglishRoom[]>(INITIAL_ROOMS);
@@ -24,14 +24,13 @@ export default function App() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
   const [isTuitionModalOpen, setIsTuitionModalOpen] = useState<boolean>(false);
   const [isCreateRoomModalOpen, setIsCreateRoomModalOpen] = useState<boolean>(false);
-  const [isAboutModalOpen, setIsAboutModalOpen] = useState<boolean>(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
   const [profileTargetUser, setProfileTargetUser] = useState<ClubUser>(DEFAULT_GUEST_USER);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   // Chat in active room
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    { id: 1, sender: 'Hệ Thống', text: 'Chào mừng bạn đến với phòng luyện nói CLB Tiếng Anh!', time: '19:30', isSystem: true },
+    { id: 1, sender: 'Hệ Thống', text: 'Chào mừng bạn đến với phòng luyện nói GraceSpeak Club!', time: '19:30', isSystem: true },
     { id: 2, sender: 'Cô Hoàng Lan Anh', text: 'Hello everyone! Please raise your hand if you want to answer question 1.', time: '19:32' },
     { id: 3, sender: 'Bạn Học Viên', text: 'Cô ơi cho em hỏi từ "Delicacy" nhấn trọng âm ở đâu ạ?', time: '19:35' },
   ]);
@@ -97,12 +96,12 @@ export default function App() {
   const handleLogout = () => {
     setCurrentUser(DEFAULT_GUEST_USER);
     if (currentView === 'admin') {
-      setCurrentView('lobby');
+      setCurrentView('intro');
     }
     showToast('Đã đăng xuất tài khoản thành công', 'slate');
   };
 
-  // Open Profile
+  // Open Profile Modal
   const handleOpenProfile = (targetUser?: ClubUser) => {
     setProfileTargetUser(targetUser || currentUser);
     setIsProfileModalOpen(true);
@@ -142,14 +141,22 @@ export default function App() {
         currentUser={currentUser}
         onOpenLoginModal={() => setIsLoginModalOpen(true)}
         onOpenTuitionModal={() => setIsTuitionModalOpen(true)}
-        onOpenAboutModal={() => setIsAboutModalOpen(true)}
         onOpenProfileModal={handleOpenProfile}
         onLogout={handleLogout}
       />
 
       {/* Main View Router */}
       <div className="relative z-10 flex-1 flex flex-col">
-        {currentView === 'lobby' ? (
+        {currentView === 'intro' ? (
+          /* TRANG GIỚI THIỆU MẶC ĐỊNH VỚI NÚT LỚN VÀO SẢNH */
+          <IntroView
+            onGoToLobby={() => setCurrentView('lobby')}
+            onOpenTuitionModal={() => setIsTuitionModalOpen(true)}
+            onOpenLoginModal={() => setIsLoginModalOpen(true)}
+            isLoggedIn={currentUser.id !== 'guest-user'}
+          />
+        ) : currentView === 'lobby' ? (
+          /* SẢNH PHÒNG HỌC */
           <LobbyView
             currentUser={currentUser}
             rooms={rooms}
@@ -158,6 +165,7 @@ export default function App() {
             onShowToast={showToast}
           />
         ) : currentView === 'room' ? (
+          /* PHÒNG LUYỆN NÓI */
           <RoomView
             room={currentRoom}
             currentUser={currentUser}
@@ -167,6 +175,7 @@ export default function App() {
             onShowToast={showToast}
           />
         ) : (
+          /* QUẢN TRỊ ADMIN BẢO */
           <AdminDashboard
             currentUser={currentUser}
             users={users}
@@ -185,7 +194,12 @@ export default function App() {
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
         users={users}
-        onLoginSuccess={(u) => setCurrentUser(u)}
+        onLoginSuccess={(u) => {
+          setCurrentUser(u);
+          if (u.role === 'admin') {
+            setCurrentView('admin');
+          }
+        }}
         onRegisterSuccess={handleRegisterUser}
         onShowToast={showToast}
       />
@@ -206,11 +220,6 @@ export default function App() {
         currentUser={currentUser}
         onCreateRoom={handleCreateRoom}
         onShowToast={showToast}
-      />
-
-      <AboutModal
-        isOpen={isAboutModalOpen}
-        onClose={() => setIsAboutModalOpen(false)}
       />
 
       <UserProfileModal
