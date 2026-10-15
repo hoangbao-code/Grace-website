@@ -31,7 +31,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div
           className="flex items-center cursor-pointer group"
           onClick={() => onSwitchView('intro')}
-          title="Trang chủ GraceSpeak Club"
+          title="Trang chủ Fluently Club"
         >
           <Logo size="md" showText={true} />
         </div>

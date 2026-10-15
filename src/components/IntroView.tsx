@@ -25,7 +25,7 @@ export const IntroView: React.FC<IntroViewProps> = ({
         {/* Brand Tagline Badge */}
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-violet-500/15 via-indigo-500/15 to-cyan-500/15 border border-indigo-500/30 text-indigo-300 text-xs sm:text-sm font-bold shadow-lg shadow-indigo-500/10">
           <Sparkles className="w-4 h-4 text-cyan-400 animate-pulse" />
-          <span>GRACESPEAK CLUB • KHÔNG GIAN LUYỆN NÓI TIẾNG ANH PHẢN XẠ THỜI GIAN THỰC</span>
+          <span>FLUENTLY CLUB • KHÔNG GIAN LUYỆN NÓI TIẾNG ANH PHẢN XẠ THỜI GIAN THỰC</span>
         </div>
 
         {/* Main Title */}
@@ -191,7 +191,7 @@ export const IntroView: React.FC<IntroViewProps> = ({
             <span>Trải Nghiệm Độc Đáo</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
-            Tại Sao Nên Luyện Nói Tại GraceSpeak Club?
+            Tại Sao Nên Luyện Nói Tại Fluently Club?
           </h2>
         </div>
 
@@ -289,7 +289,7 @@ export const IntroView: React.FC<IntroViewProps> = ({
             <div className="text-base font-extrabold text-white">
               Hoàng Xuân Gia Bảo
             </div>
-            <p className="text-[11px] text-purple-300">Chủ nhiệm CLB GraceSpeak</p>
+            <p className="text-[11px] text-purple-300">Chủ nhiệm Fluently Club</p>
           </div>
 
           {/* VietQR MBBank */}
@@ -310,7 +310,7 @@ export const IntroView: React.FC<IntroViewProps> = ({
           <div className="flex items-center gap-3">
             <Logo size="sm" showText={false} />
             <span className="font-semibold text-slate-300">
-              GraceSpeak English Community
+              Fluently English Community
             </span>
           </div>
           <div>

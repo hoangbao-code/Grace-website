@@ -43,7 +43,7 @@ export default function App() {
 
   // Chat in active room
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    { id: 1, sender: 'Hệ Thống', text: 'Chào mừng bạn đến với phòng luyện nói GraceSpeak Club!', time: '19:30', isSystem: true },
+    { id: 1, sender: 'Hệ Thống', text: 'Chào mừng bạn đến với phòng luyện nói Fluently Club!', time: '19:30', isSystem: true },
     { id: 2, sender: 'Cô Hoàng Lan Anh', text: 'Hello everyone! Please raise your hand if you want to answer question 1.', time: '19:32' },
     { id: 3, sender: 'Bạn Học Viên', text: 'Cô ơi cho em hỏi từ "Delicacy" nhấn trọng âm ở đâu ạ?', time: '19:35' },
   ]);

@@ -11,59 +11,62 @@ export const Logo: React.FC<LogoProps> = ({
   size = 'md',
   showText = true,
 }) => {
-  const iconSizes = {
-    sm: 'w-8 h-8',
-    md: 'w-10 h-10',
-    lg: 'w-14 h-14',
+  const containerSizes = {
+    sm: 'w-8 h-8 rounded-lg',
+    md: 'w-10 h-10 rounded-xl',
+    lg: 'w-14 h-14 rounded-2xl',
+  };
+
+  const svgSizes = {
+    sm: 'w-5 h-5',
+    md: 'w-6 h-6',
+    lg: 'w-8 h-8',
   };
 
   return (
     <div className={`flex items-center gap-3 ${className}`}>
-      {/* Icon Badge */}
+      {/* Logo Icon: Khung hội thoại + Sóng âm phản xạ Gradient */}
       <div
-        className={`relative ${iconSizes[size]} rounded-2xl bg-gradient-to-tr from-violet-600 via-indigo-500 to-cyan-400 p-[1.5px] shadow-lg shadow-indigo-500/25 group-hover:shadow-indigo-500/40 transition-all duration-300`}
+        className={`relative flex items-center justify-center ${containerSizes[size]} bg-slate-900/90 border border-purple-500/30 shadow-[0_0_15px_rgba(139,92,246,0.35)] transition-all duration-300 group-hover:border-purple-400/60 group-hover:shadow-[0_0_20px_rgba(139,92,246,0.5)]`}
       >
-        <div className="w-full h-full bg-[#0B0F19] rounded-[14px] flex items-center justify-center overflow-hidden relative">
-          {/* Subtle Glow */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-violet-500/20 to-cyan-500/10 pointer-events-none" />
-
-          {/* SVG Monogram */}
-          <svg viewBox="0 0 100 100" className="w-[82%] h-[82%] drop-shadow-md" fill="none">
-            <defs>
-              <linearGradient id="logo-linear" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#A78BFA" />
-                <stop offset="50%" stopColor="#6366F1" />
-                <stop offset="100%" stopColor="#38BDF8" />
-              </linearGradient>
-              <linearGradient id="star-linear" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#34D399" />
-                <stop offset="100%" stopColor="#38BDF8" />
-              </linearGradient>
-            </defs>
-
-            {/* Stylized Speech G */}
-            <path
-              d="M66 42 C63 34 56 30 48 30 C37 30 29 39 29 50 C29 61 37 70 48 70 C58 70 65 63 66 54 L48 54 L48 46 L75 46 C75.5 48 75.5 49 75.5 51 C75.5 66 64 77 48 77 C32 77 21 65 21 50 C21 35 32 23 48 23 C57 23 65 27 70 34 L66 42 Z"
-              fill="url(#logo-linear)"
-            />
-
-            {/* Speaking Sparkle Star */}
-            <path
-              d="M72 26 C72 31 75 34 80 34 C75 34 72 37 72 42 C72 37 69 34 64 34 C69 34 72 31 72 26 Z"
-              fill="url(#star-linear)"
-            />
-          </svg>
-        </div>
+        <svg
+          className={svgSizes[size]}
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#A855F7" />
+              <stop offset="100%" stopColor="#06B6D4" />
+            </linearGradient>
+          </defs>
+          {/* Khung hội thoại cách điệu */}
+          <path
+            d="M12 3C7.02944 3 3 6.58172 3 11C3 12.9585 3.79468 14.7535 5.11583 16.1431C5.42322 16.4664 5.51865 16.9298 5.3444 17.3416L4.39162 19.5936C4.09391 20.2973 4.78283 21.0125 5.49811 20.7429L7.9547 19.8172C8.34901 19.6687 8.78483 19.6874 9.19209 19.7995C10.0827 20.0447 11.0261 20.1765 12 20.1765C16.9706 20.1765 21 16.5947 21 12.1765C21 7.7582 16.9706 3 12 3Z"
+            stroke="url(#brandGradient)"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          {/* 3 vạch sóng âm luyện nói bên trong */}
+          <path
+            d="M8.5 11.5V12.5M12 9V15M15.5 10.5V13.5"
+            stroke="url(#brandGradient)"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+          />
+        </svg>
       </div>
 
       {/* Brand Name & Tagline */}
       {showText && (
         <div className="flex flex-col">
           <div className="flex items-center gap-2">
-            <span className="font-black text-lg md:text-xl tracking-tight bg-gradient-to-r from-white via-slate-100 to-indigo-300 bg-clip-text text-transparent">
-              GraceSpeak
+            <span className="font-black text-lg md:text-xl tracking-tight bg-gradient-to-r from-white via-slate-100 to-purple-200 bg-clip-text text-transparent">
+              Fluently
             </span>
-            <span className="text-[9px] font-extrabold tracking-wider px-1.5 py-0.5 rounded-md bg-gradient-to-r from-indigo-500/20 to-cyan-500/20 text-indigo-300 border border-indigo-500/30">
+            <span className="text-[10px] font-extrabold tracking-widest px-1.5 py-0.5 rounded-md bg-gradient-to-r from-purple-500/20 to-cyan-500/20 text-purple-300 border border-purple-500/30 uppercase">
               CLUB
             </span>
           </div>

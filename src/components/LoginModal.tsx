@@ -157,7 +157,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
           <p className="text-xs text-slate-400">
             {activeTab === 'login'
               ? 'Nhập email và mật khẩu của bạn để vào sảnh học'
-              : 'Gia nhập cộng đồng luyện nói tiếng Anh GraceSpeak Club'}
+              : 'Gia nhập cộng đồng luyện nói tiếng Anh Fluently Club'}
           </p>
         </div>
 
