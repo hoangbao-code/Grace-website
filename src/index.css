@@ -115,3 +115,58 @@ body {
   transform: scale(1.35);
   z-index: 20;
 }
+
+/* Comic Speech Bubble Pop Animation */
+@keyframes bubblePop {
+  0% { opacity: 0; transform: translateY(12px) scale(0.85); }
+  12% { opacity: 1; transform: translateY(-4px) scale(1.04); }
+  22% { transform: translateY(0) scale(1); }
+  85% { opacity: 1; transform: translateY(-2px); }
+  100% { opacity: 0; transform: translateY(-16px) scale(0.9); }
+}
+.animate-bubble-pop {
+  animation: bubblePop 4.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Face Filter: Drop Crown / Glasses */
+@keyframes dropFilter {
+  0% { transform: translateY(-60px) scale(0.5); opacity: 0; }
+  60% { transform: translateY(6px) scale(1.1); opacity: 1; }
+  80% { transform: translateY(-2px) scale(0.98); }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+.animate-drop-filter {
+  animation: dropFilter 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* Face Filter: Kiss & Rose Wiggle */
+@keyframes wiggleKiss {
+  0% { transform: scale(0.3) rotate(-15deg); opacity: 0; }
+  35% { transform: scale(1.25) rotate(10deg); opacity: 1; }
+  55% { transform: scale(1) rotate(-6deg); }
+  75% { transform: scale(1.05) rotate(4deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.animate-wiggle-kiss {
+  animation: wiggleKiss 0.5s ease-out forwards;
+}
+
+/* Face Filter: Splat Tomato */
+@keyframes splatTomato {
+  0% { transform: scale(0.2); opacity: 0; }
+  30% { transform: scale(1.25); opacity: 1; }
+  60% { transform: scale(1); opacity: 1; }
+  100% { transform: translateY(24px) scale(0.9); opacity: 0; }
+}
+.animate-splat-tomato {
+  animation: splatTomato 3.8s ease-in-out forwards;
+}
+
+/* Lucky Speaker Spotlight Glowing Ring */
+@keyframes luckySpotlight {
+  0%, 100% { box-shadow: 0 0 25px rgba(245, 158, 11, 0.6), inset 0 0 15px rgba(245, 158, 11, 0.3); border-color: #f59e0b; }
+  50% { box-shadow: 0 0 50px rgba(245, 158, 11, 0.95), inset 0 0 35px rgba(245, 158, 11, 0.5); border-color: #fbbf24; }
+}
+.animate-lucky-spotlight {
+  animation: luckySpotlight 1s infinite alternate;
+}
