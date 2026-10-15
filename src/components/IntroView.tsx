@@ -228,24 +228,6 @@ export const IntroView: React.FC<IntroViewProps> = ({
         </div>
       </section>
 
-      {/* Bottom Final CTA */}
-      <section className="text-center py-8 space-y-6">
-        <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-          Sẵn Sàng Nâng Tầm Tiếng Anh Của Bạn?
-        </h2>
-        <p className="text-sm text-slate-400 max-w-lg mx-auto">
-          Bước vào Sảnh Phòng Học ngay hôm nay và chọn chủ đề bạn yêu thích để bắt đầu luyện phản xạ cùng mọi người.
-        </p>
-        <div className="flex justify-center">
-          <button
-            onClick={onGoToLobby}
-            className="px-10 py-5 rounded-2xl bg-gradient-to-r from-violet-600 via-indigo-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white font-black text-lg shadow-2xl shadow-indigo-500/30 hover:scale-105 active:scale-95 transition-all duration-300 flex items-center gap-3 cursor-pointer group border border-white/20"
-          >
-            <span>VÀO SẢNH PHÒNG HỌC NGAY</span>
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
-          </button>
-        </div>
-      </section>
 
       {/* SẾP BẢO - THÔNG TIN LIÊN HỆ CHÍNH THỨC */}
       <section className="glass-panel rounded-3xl p-6 sm:p-10 border border-white/10 space-y-8 relative overflow-hidden">
