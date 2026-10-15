@@ -46,7 +46,7 @@ export const INITIAL_USERS: ClubUser[] = [
   },
 ];
 
-// Official Rooms only - Zero test/mock rooms
+// Official Rooms only - Web mới tinh, không mock người dùng ảo
 export const INITIAL_ROOMS: EnglishRoom[] = [
   // 1. PHÂN CẤP PHÒNG: NEWBIE (A1-A2)
   {
@@ -59,11 +59,11 @@ export const INITIAL_ROOMS: EnglishRoom[] = [
     leaderAvatar: 'LA',
     topic: 'Luyện cặp âm khó /i:/ vs /ɪ/, /θ/ vs /ð/ & Kỹ thuật nối âm',
     code: '#ENG-NB101',
-    membersCount: 8,
+    membersCount: 0,
     maxMembers: 20,
-    isLive: true,
-    scheduledTime: 'Đang diễn ra trực tiếp',
-    activeAvatars: ['LA', 'GB'],
+    isLive: false,
+    scheduledTime: '20:00 Tối nay',
+    activeAvatars: [],
     vocabList: [
       'Pronunciation /prəˌnʌn.siˈeɪ.ʃən/: Phát âm',
       'Vowel /ˈvaʊ.əl/: Nguyên âm',
@@ -81,11 +81,11 @@ export const INITIAL_ROOMS: EnglishRoom[] = [
     leaderAvatar: 'LA',
     topic: 'Cách gọi món tại nhà hàng, hỏi đường và mua sắm cơ bản',
     code: '#ENG-NB102',
-    membersCount: 5,
+    membersCount: 0,
     maxMembers: 15,
     isLive: false,
-    scheduledTime: '20:00 Tối nay',
-    activeAvatars: ['LA'],
+    scheduledTime: 'Sắp diễn ra',
+    activeAvatars: [],
     vocabList: [
       'Order /ˈɔː.dər/: Đặt món',
       'Receipt /rɪˈsiːt/: Hóa đơn',
@@ -104,11 +104,11 @@ export const INITIAL_ROOMS: EnglishRoom[] = [
     leaderAvatar: 'LA',
     topic: 'Thảo luận chia sẻ chuyến đi đáng nhớ nhất & Trải nghiệm giao thoa văn hóa',
     code: '#ENG-IT201',
-    membersCount: 12,
+    membersCount: 0,
     maxMembers: 25,
-    isLive: true,
-    scheduledTime: 'Đang diễn ra trực tiếp',
-    activeAvatars: ['GB', 'LA'],
+    isLive: false,
+    scheduledTime: 'Sắp diễn ra',
+    activeAvatars: [],
     vocabList: [
       'Breathtaking /ˈbreθˌteɪ.kɪŋ/: Đẹp ngoạn mục',
       'Local delicacy /ˈdel.ɪ.kə.si/: Đặc sản địa phương',
@@ -128,11 +128,11 @@ export const INITIAL_ROOMS: EnglishRoom[] = [
     leaderAvatar: 'GB',
     topic: 'Chủ đề tranh biện: "Will Artificial Intelligence replace human educators?"',
     code: '#ENG-AD301',
-    membersCount: 7,
+    membersCount: 0,
     maxMembers: 12,
-    isLive: true,
-    scheduledTime: 'Đang diễn ra trực tiếp',
-    activeAvatars: ['GB', 'LA'],
+    isLive: false,
+    scheduledTime: 'Sắp diễn ra',
+    activeAvatars: [],
     vocabList: [
       'Indispensable /ˌɪn.dɪˈspen.sə.bəl/: Không thể thiếu',
       'Paradigm shift: Bước ngoặt tư duy',
@@ -152,11 +152,11 @@ export const INITIAL_ROOMS: EnglishRoom[] = [
     leaderAvatar: '☕',
     topic: 'Không gian mở 24/7: Bật camera tự học bài, ghép cặp luyện nói tiếng Anh tự do, ice-breaking kết bạn không cần giáo viên!',
     code: '#LOUNGE-247',
-    membersCount: 14,
+    membersCount: 0,
     maxMembers: 50,
     isLive: true,
     scheduledTime: 'Mở cửa 24/7 liên tục',
-    activeAvatars: ['GB', 'LA', 'TU', 'MI'],
+    activeAvatars: [],
     vocabList: [
       'Ice-breaker: Câu chuyện bắt đầu làm quen',
       'What are you working on today?: Hôm nay bạn đang làm bài gì thế?',
@@ -166,20 +166,10 @@ export const INITIAL_ROOMS: EnglishRoom[] = [
   },
 ];
 
-// BẢNG VÀNG VINH DANH TUẦN (WEEKLY FLUENCY STARS)
+// BẢNG VÀNG VINH DANH TUẦN (WEEKLY FLUENCY STARS) - CHỈ CÓ SÁNG LẬP VIÊN CHÍNH THỨC
 export const LEADERBOARD_TOP_USERS: LeaderboardUser[] = [
   {
     rank: 1,
-    name: 'Cô Hoàng Lan Anh',
-    avatarText: 'LA',
-    roleTitle: 'Leader CLB / Giảng viên',
-    exp: 3450,
-    badgeTitle: 'Bậc Thầy Giao Tiếp',
-    badgeLevel: 'Master of Fluency',
-    streakDays: 32,
-  },
-  {
-    rank: 2,
     name: 'Hoàng Xuân Gia Bảo',
     avatarText: 'GB',
     roleTitle: 'Admin & Founder',
@@ -189,13 +179,23 @@ export const LEADERBOARD_TOP_USERS: LeaderboardUser[] = [
     streakDays: 19,
   },
   {
-    rank: 3,
-    name: 'Nguyễn Minh Tuấn',
-    avatarText: 'MT',
-    roleTitle: 'Học viên Tích Cực',
-    exp: 2150,
-    badgeTitle: 'Chiến Thần Khám Phá',
-    badgeLevel: 'Explorer',
+    rank: 2,
+    name: 'Cô Hoàng Lan Anh',
+    avatarText: 'LA',
+    roleTitle: 'Leader CLB / Giảng viên',
+    exp: 2500,
+    badgeTitle: 'Người Nói Tự Tin',
+    badgeLevel: 'Confident Speaker',
     streakDays: 14,
+  },
+  {
+    rank: 3,
+    name: 'Đang Chờ Ghi Danh',
+    avatarText: '✨',
+    roleTitle: 'Vị trí tuần này đang mở',
+    exp: 0,
+    badgeTitle: 'Tân Binh Tiềm Năng',
+    badgeLevel: 'Seedling',
+    streakDays: 0,
   },
 ];

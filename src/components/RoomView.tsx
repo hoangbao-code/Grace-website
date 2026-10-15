@@ -20,6 +20,7 @@ import {
   Gift,
   Trophy,
   FileText,
+  Trash2,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { ChatMessage, ClubUser, EnglishRoom, FloatingEmoji, RoomParticipant } from '../types';
@@ -96,36 +97,22 @@ export const RoomView: React.FC<RoomViewProps> = ({
   const streamRef = useRef<MediaStream | null>(null);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
 
-  // Other participants in room
-  const [participants] = useState<RoomParticipant[]>([
-    {
-      id: 'p-1',
-      name: room.leaderName,
-      avatarText: room.leaderAvatar,
-      role: 'leader',
-      isCamOn: true,
-      isMuted: false,
-      isHandRaised: false,
-    },
-    {
-      id: 'p-2',
-      name: 'Trần Quốc Huy',
-      avatarText: 'QH',
-      role: 'student',
-      isCamOn: false,
-      isMuted: true,
-      isHandRaised: true,
-    },
-    {
-      id: 'p-3',
-      name: 'Nguyễn Thu Hà',
-      avatarText: 'TH',
-      role: 'student',
-      isCamOn: false,
-      isMuted: true,
-      isHandRaised: false,
-    },
-  ]);
+  // Other participants in room - Web mới: Chỉ có Leader nếu phòng do Leader khác tạo
+  const [participants] = useState<RoomParticipant[]>(
+    currentUser.id !== room.leaderId
+      ? [
+          {
+            id: 'p-1',
+            name: room.leaderName,
+            avatarText: room.leaderAvatar,
+            role: 'leader',
+            isCamOn: true,
+            isMuted: false,
+            isHandRaised: false,
+          },
+        ]
+      : []
+  );
 
   // Webcam Toggle
   const toggleCamera = async () => {
@@ -933,11 +920,25 @@ export const RoomView: React.FC<RoomViewProps> = ({
                 {vocabList.map((item, idx) => (
                   <div
                     key={idx}
-                    className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-1 text-xs"
+                    className="p-3 rounded-xl bg-slate-900/60 border border-white/5 flex items-start justify-between gap-2 text-xs group"
                   >
-                    <p className="font-bold text-indigo-300">{item.split(':')[0]}</p>
-                    {item.split(':')[1] && (
-                      <p className="text-slate-300 text-[11px]">{item.split(':')[1]}</p>
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <p className="font-bold text-indigo-300">{item.split(':')[0]}</p>
+                      {item.split(':')[1] && (
+                        <p className="text-slate-300 text-[11px]">{item.split(':')[1]}</p>
+                      )}
+                    </div>
+                    {isLeaderOrAdmin && (
+                      <button
+                        onClick={() => {
+                          setVocabList((prev) => prev.filter((_, i) => i !== idx));
+                          onShowToast('Đã xóa từ vựng khỏi bảng ghim!', 'slate');
+                        }}
+                        className="opacity-60 hover:opacity-100 p-1 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all cursor-pointer flex-shrink-0"
+                        title="Xóa từ vựng này"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     )}
                   </div>
                 ))}

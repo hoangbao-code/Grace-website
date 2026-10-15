@@ -11,6 +11,7 @@ import {
   Sparkles,
   Coffee,
   Zap,
+  Trash2,
 } from 'lucide-react';
 import { ClubUser, EnglishLevel, EnglishRoom } from '../types';
 import { LEADERBOARD_TOP_USERS } from '../data/mockData';
@@ -20,6 +21,7 @@ interface LobbyViewProps {
   rooms: EnglishRoom[];
   onJoinRoom: (room: EnglishRoom) => void;
   onCreateRoomModal: () => void;
+  onDeleteRoom?: (roomId: string) => void;
   onShowToast: (text: string, type?: 'indigo' | 'emerald' | 'amber' | 'rose') => void;
 }
 
@@ -28,6 +30,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
   rooms,
   onJoinRoom,
   onCreateRoomModal,
+  onDeleteRoom,
   onShowToast,
 }) => {
   const [selectedLevel, setSelectedLevel] = useState<EnglishLevel | 'all'>('all');
@@ -191,10 +194,10 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
               <div className="flex items-center gap-4 text-xs text-slate-300 pt-1">
                 <span className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                  <strong className="text-white">14 bạn</strong> đang tự học & luyện nói
+                  <strong className="text-white">Không Gian Mở 24/7</strong> • Sẵn sàng kết nối
                 </span>
                 <span>•</span>
-                <span className="text-purple-300">Phản xạ tự nhiên & không áp lực</span>
+                <span className="text-purple-300">Tự do vào học và luyện nói bất cứ lúc nào</span>
               </div>
             </div>
 
@@ -393,17 +396,34 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
                     {room.levelLabel}
                   </span>
 
-                  {room.isLive ? (
-                    <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-bold">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-                      <span>Đang diễn ra</span>
-                    </span>
-                  ) : (
-                    <span className="text-[10px] text-slate-400 flex items-center gap-1 font-mono">
-                      <Clock className="w-3 h-3" />
-                      <span>{room.scheduledTime || 'Sắp bắt đầu'}</span>
-                    </span>
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    {room.isLive ? (
+                      <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-bold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                        <span>Đang diễn ra</span>
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-slate-400 flex items-center gap-1 font-mono">
+                        <Clock className="w-3 h-3" />
+                        <span>{room.scheduledTime || 'Sắp bắt đầu'}</span>
+                      </span>
+                    )}
+
+                    {currentUser.role === 'admin' && onDeleteRoom && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (window.confirm(`Sếp có chắc chắn muốn xóa vĩnh viễn phòng học "${room.title}" không?`)) {
+                            onDeleteRoom(room.id);
+                          }
+                        }}
+                        className="p-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 transition-all cursor-pointer"
+                        title="Admin xóa phòng học"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Title */}

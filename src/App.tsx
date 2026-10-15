@@ -15,7 +15,19 @@ import { ChatMessage, ClubUser, EnglishRoom, ToastMessage } from './types';
 export default function App() {
   // Global State - Default to 'intro' landing page when first entering
   const [currentView, setCurrentView] = useState<'intro' | 'lobby' | 'room' | 'admin'>('intro');
-  const [users, setUsers] = useState<ClubUser[]>(INITIAL_USERS);
+
+  // Quản lý Users (Lưu vào localStorage để Admin xóa/thêm không bị reset)
+  const [users, setUsers] = useState<ClubUser[]>(() => {
+    try {
+      const saved = localStorage.getItem('fluently_users');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return INITIAL_USERS;
+  });
   
   // Ghi nhớ người dùng / Admin vào hệ thống từ đầu
   const [currentUser, setCurrentUser] = useState<ClubUser>(() => {
@@ -30,7 +42,19 @@ export default function App() {
     return DEFAULT_GUEST_USER;
   });
 
-  const [rooms, setRooms] = useState<EnglishRoom[]>(INITIAL_ROOMS);
+  // Quản lý Rooms (Lưu vào localStorage để Admin xóa/thêm không bị reset)
+  const [rooms, setRooms] = useState<EnglishRoom[]>(() => {
+    try {
+      const saved = localStorage.getItem('fluently_rooms');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return INITIAL_ROOMS;
+  });
+
   const [currentRoom, setCurrentRoom] = useState<EnglishRoom>(INITIAL_ROOMS[0]);
 
   // Modals & Profile
@@ -41,11 +65,15 @@ export default function App() {
   const [profileTargetUser, setProfileTargetUser] = useState<ClubUser>(DEFAULT_GUEST_USER);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
-  // Chat in active room
+  // Chat in active room: Chỉ có tin nhắn hệ thống chào mừng, web mới sạch sẽ
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    { id: 1, sender: 'Hệ Thống', text: 'Chào mừng bạn đến với phòng luyện nói Fluently Club!', time: '19:30', isSystem: true },
-    { id: 2, sender: 'Cô Hoàng Lan Anh', text: 'Hello everyone! Please raise your hand if you want to answer question 1.', time: '19:32' },
-    { id: 3, sender: 'Bạn Học Viên', text: 'Cô ơi cho em hỏi từ "Delicacy" nhấn trọng âm ở đâu ạ?', time: '19:35' },
+    {
+      id: 1,
+      sender: 'Hệ Thống Fluently',
+      text: '🎉 Chào mừng bạn đến với Fluently Club! Hãy bật micro và tự tin luyện nói tiếng Anh nhé!',
+      time: 'Hôm nay',
+      isSystem: true,
+    },
   ]);
 
   // Toast Notification
@@ -69,26 +97,81 @@ export default function App() {
     showToast(`Đã tham gia phòng học "${room.title}"`, 'indigo');
   };
 
-  // Create Room (Host Leader or Admin)
+  // Create Room (Host Leader or Admin) - Lưu localStorage
   const handleCreateRoom = (newRoom: EnglishRoom) => {
-    setRooms((prev) => [newRoom, ...prev]);
+    setRooms((prev) => {
+      const updated = [newRoom, ...prev];
+      try {
+        localStorage.setItem('fluently_rooms', JSON.stringify(updated));
+      } catch (e) {
+        console.error(e);
+      }
+      return updated;
+    });
     setCurrentRoom(newRoom);
     setCurrentView('room');
   };
 
-  // Close Room (Admin action)
-  const handleCloseRoom = (roomId: string) => {
-    setRooms((prev) => prev.filter((r) => r.id !== roomId));
-    if (currentRoom.id === roomId) {
+  // Close / Delete Room (Admin action) - Lưu localStorage
+  const handleDeleteRoom = (roomId: string) => {
+    setRooms((prev) => {
+      const updated = prev.filter((r) => r.id !== roomId);
+      try {
+        localStorage.setItem('fluently_rooms', JSON.stringify(updated));
+      } catch (e) {
+        console.error(e);
+      }
+      return updated;
+    });
+    if (currentRoom?.id === roomId) {
       setCurrentView('lobby');
     }
+    showToast('Đã xóa phòng học thành công!', 'rose');
   };
 
-  // Promote / Demote Leader role
+  // Delete User (Admin action) - Lưu localStorage
+  const handleDeleteUser = (userId: string) => {
+    if (userId === 'user-admin' || currentUser.id === userId) {
+      showToast('Không thể xóa tài khoản Quản Trị Viên tối cao!', 'rose');
+      return;
+    }
+    setUsers((prev) => {
+      const updated = prev.filter((u) => u.id !== userId);
+      try {
+        localStorage.setItem('fluently_users', JSON.stringify(updated));
+      } catch (e) {
+        console.error(e);
+      }
+      return updated;
+    });
+    showToast('Đã xóa người dùng khỏi hệ thống CLB!', 'slate');
+  };
+
+  // Add User Manually (Admin action) - Lưu localStorage
+  const handleAddUser = (newUser: ClubUser) => {
+    setUsers((prev) => {
+      const updated = [...prev, newUser];
+      try {
+        localStorage.setItem('fluently_users', JSON.stringify(updated));
+      } catch (e) {
+        console.error(e);
+      }
+      return updated;
+    });
+    showToast(`Đã thêm thành viên "${newUser.name}" thành công!`, 'emerald');
+  };
+
+  // Promote / Demote Leader role - Lưu localStorage
   const handleToggleUserRole = (userId: string, newRole: 'leader' | 'student') => {
-    setUsers((prev) =>
-      prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
-    );
+    setUsers((prev) => {
+      const updated = prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u));
+      try {
+        localStorage.setItem('fluently_users', JSON.stringify(updated));
+      } catch (e) {
+        console.error(e);
+      }
+      return updated;
+    });
     if (currentUser.id === userId) {
       const updatedUser = { ...currentUser, role: newRole };
       setCurrentUser(updatedUser);
@@ -96,11 +179,17 @@ export default function App() {
     }
   };
 
-  // Toggle Tuition Paid Status
+  // Toggle Tuition Paid Status - Lưu localStorage
   const handleToggleTuitionStatus = (userId: string, newStatus: 'paid' | 'unpaid') => {
-    setUsers((prev) =>
-      prev.map((u) => (u.id === userId ? { ...u, tuitionStatus: newStatus } : u))
-    );
+    setUsers((prev) => {
+      const updated = prev.map((u) => (u.id === userId ? { ...u, tuitionStatus: newStatus } : u));
+      try {
+        localStorage.setItem('fluently_users', JSON.stringify(updated));
+      } catch (e) {
+        console.error(e);
+      }
+      return updated;
+    });
     if (currentUser.id === userId) {
       const updatedUser = { ...currentUser, tuitionStatus: newStatus };
       setCurrentUser(updatedUser);
@@ -210,6 +299,7 @@ export default function App() {
             rooms={rooms}
             onJoinRoom={handleJoinRoom}
             onCreateRoomModal={() => setIsCreateRoomModalOpen(true)}
+            onDeleteRoom={handleDeleteRoom}
             onShowToast={showToast}
           />
         ) : currentView === 'room' ? (
@@ -230,7 +320,9 @@ export default function App() {
             rooms={rooms}
             onToggleUserRole={handleToggleUserRole}
             onToggleTuitionStatus={handleToggleTuitionStatus}
-            onCloseRoom={handleCloseRoom}
+            onCloseRoom={handleDeleteRoom}
+            onDeleteUser={handleDeleteUser}
+            onAddUser={handleAddUser}
             onCreateRoomModal={() => setIsCreateRoomModalOpen(true)}
             onShowToast={showToast}
           />

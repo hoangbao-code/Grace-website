@@ -11,7 +11,7 @@ import {
   XCircle,
   Search,
 } from 'lucide-react';
-import { ClubUser, EnglishRoom } from '../types';
+import { ClubUser, EnglishRoom, UserRole, TuitionStatus } from '../types';
 
 interface AdminDashboardProps {
   currentUser: ClubUser;
@@ -20,6 +20,8 @@ interface AdminDashboardProps {
   onToggleUserRole: (userId: string, newRole: 'leader' | 'student') => void;
   onToggleTuitionStatus: (userId: string, newStatus: 'paid' | 'unpaid') => void;
   onCloseRoom: (roomId: string) => void;
+  onDeleteUser?: (userId: string) => void;
+  onAddUser?: (user: ClubUser) => void;
   onCreateRoomModal: () => void;
   onShowToast: (text: string, type?: 'indigo' | 'emerald' | 'amber' | 'rose') => void;
 }
@@ -30,11 +32,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onToggleUserRole,
   onToggleTuitionStatus,
   onCloseRoom,
+  onDeleteUser,
+  onAddUser,
   onCreateRoomModal,
   onShowToast,
 }) => {
   const [activeTab, setActiveTab] = useState<'rooms' | 'leaders' | 'students'>('rooms');
   const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // Form state for adding user
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+  const [newUserName, setNewUserName] = useState('');
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserPhone, setNewUserPhone] = useState('');
+  const [newUserRole, setNewUserRole] = useState<UserRole>('student');
+  const [newUserTuition, setNewUserTuition] = useState<TuitionStatus>('paid');
 
   const totalLeaders = users.filter((u) => u.role === 'leader').length;
   const totalStudents = users.filter((u) => u.role === 'student').length;
@@ -68,13 +80,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </p>
           </div>
 
-          <button
-            onClick={onCreateRoomModal}
-            className="px-5 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs sm:text-sm shadow-xl flex items-center gap-2 cursor-pointer transition-all active:scale-95"
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span>+ Mở Phòng Mới Với Tư Cách Leader</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setIsAddUserModalOpen(true)}
+              className="px-4 py-3 rounded-xl bg-slate-900 border border-purple-500/40 hover:bg-purple-950/40 text-purple-300 font-bold text-xs sm:text-sm shadow-lg flex items-center gap-2 cursor-pointer transition-all active:scale-95"
+            >
+              <PlusCircle className="w-4 h-4 text-purple-400" />
+              <span>+ Thêm Thành Viên</span>
+            </button>
+            <button
+              onClick={onCreateRoomModal}
+              className="px-5 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs sm:text-sm shadow-xl flex items-center gap-2 cursor-pointer transition-all active:scale-95"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>+ Mở Phòng Mới</span>
+            </button>
+          </div>
         </div>
 
         {/* 4 KPI Summary Cards */}
@@ -276,15 +297,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </td>
                     <td className="py-3 px-3 text-right">
                       {leader.role !== 'admin' && (
-                        <button
-                          onClick={() => {
-                            onToggleUserRole(leader.id, 'student');
-                            onShowToast(`Đã thu hồi quyền Leader của ${leader.name}`, 'slate');
-                          }}
-                          className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-semibold transition-all cursor-pointer"
-                        >
-                          Thu hồi quyền
-                        </button>
+                        <div className="inline-flex items-center gap-1.5">
+                          <button
+                            onClick={() => {
+                              onToggleUserRole(leader.id, 'student');
+                              onShowToast(`Đã thu hồi quyền Leader của ${leader.name}`, 'slate');
+                            }}
+                            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-semibold transition-all cursor-pointer"
+                          >
+                            Thu hồi quyền
+                          </button>
+                          {onDeleteUser && (
+                            <button
+                              onClick={() => {
+                                if (window.confirm(`Sếp có chắc chắn muốn xóa Leader "${leader.name}" khỏi hệ thống không?`)) {
+                                  onDeleteUser(leader.id);
+                                }
+                              }}
+                              className="p-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 transition-all cursor-pointer"
+                              title="Xóa Leader"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -359,30 +395,169 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       </button>
                     </td>
                     <td className="py-3 px-3 text-right">
-                      <button
-                        onClick={() => {
-                          const nextStatus = student.tuitionStatus === 'paid' ? 'unpaid' : 'paid';
-                          onToggleTuitionStatus(student.id, nextStatus);
-                          onShowToast(
-                            nextStatus === 'paid'
-                              ? `Đã xác nhận học phí cho học viên ${student.name}!`
-                              : `Đã chuyển ${student.name} về Chưa đóng phí!`,
-                            nextStatus === 'paid' ? 'emerald' : 'slate'
-                          );
-                        }}
-                        className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-                          student.tuitionStatus === 'paid'
-                            ? 'bg-slate-800 text-slate-400 hover:text-white'
-                            : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-md'
-                        }`}
-                      >
-                        {student.tuitionStatus === 'paid' ? 'Hủy duyệt phí' : 'Duyệt đóng tiền'}
-                      </button>
+                      <div className="inline-flex items-center gap-1.5">
+                        <button
+                          onClick={() => {
+                            const nextStatus = student.tuitionStatus === 'paid' ? 'unpaid' : 'paid';
+                            onToggleTuitionStatus(student.id, nextStatus);
+                            onShowToast(
+                              nextStatus === 'paid'
+                                ? `Đã xác nhận học phí cho học viên ${student.name}!`
+                                : `Đã chuyển ${student.name} về Chưa đóng phí!`,
+                              nextStatus === 'paid' ? 'emerald' : 'slate'
+                            );
+                          }}
+                          className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                            student.tuitionStatus === 'paid'
+                              ? 'bg-slate-800 text-slate-400 hover:text-white'
+                              : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-md'
+                          }`}
+                        >
+                          {student.tuitionStatus === 'paid' ? 'Hủy duyệt phí' : 'Duyệt đóng tiền'}
+                        </button>
+                        {onDeleteUser && (
+                          <button
+                            onClick={() => {
+                              if (window.confirm(`Sếp có chắc chắn muốn xóa học viên "${student.name}" khỏi hệ thống không?`)) {
+                                onDeleteUser(student.id);
+                              }
+                            }}
+                            className="p-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 transition-all cursor-pointer"
+                            title="Xóa Học Viên"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* MODAL: THÊM THÀNH VIÊN THỦ CÔNG CHO ADMIN */}
+      {isAddUserModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+          <div className="relative w-full max-w-md glass-panel rounded-3xl border border-purple-500/30 p-6 md:p-8 shadow-2xl space-y-5">
+            <h3 className="text-lg font-black text-white">Thêm Thành Viên Mới Vào CLB</h3>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!newUserName.trim() || !newUserEmail.trim()) {
+                  onShowToast('Vui lòng điền đầy đủ họ tên và email!', 'amber');
+                  return;
+                }
+                const initials = newUserName
+                  .trim()
+                  .split(' ')
+                  .map((w) => w[0])
+                  .join('')
+                  .toUpperCase()
+                  .slice(0, 2);
+
+                const newUser: ClubUser = {
+                  id: `user-${Date.now()}`,
+                  name: newUserName.trim(),
+                  email: newUserEmail.trim(),
+                  phone: newUserPhone.trim() || undefined,
+                  role: newUserRole,
+                  tuitionStatus: newUserTuition,
+                  avatarText: initials || 'TV',
+                  joinDate: new Date().toLocaleDateString('vi-VN'),
+                  streakDays: 1,
+                };
+
+                if (onAddUser) {
+                  onAddUser(newUser);
+                }
+                setNewUserName('');
+                setNewUserEmail('');
+                setNewUserPhone('');
+                setIsAddUserModalOpen(false);
+              }}
+              className="space-y-4 text-xs"
+            >
+              <div className="space-y-1">
+                <label className="text-slate-300 font-semibold">Họ và tên *</label>
+                <input
+                  type="text"
+                  required
+                  value={newUserName}
+                  onChange={(e) => setNewUserName(e.target.value)}
+                  placeholder="VD: Nguyễn Văn A"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-slate-300 font-semibold">Email *</label>
+                <input
+                  type="email"
+                  required
+                  value={newUserEmail}
+                  onChange={(e) => setNewUserEmail(e.target.value)}
+                  placeholder="VD: student@gmail.com"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-slate-300 font-semibold">Số điện thoại</label>
+                <input
+                  type="text"
+                  value={newUserPhone}
+                  onChange={(e) => setNewUserPhone(e.target.value)}
+                  placeholder="VD: 0987654321"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-slate-300 font-semibold">Vai trò</label>
+                  <select
+                    value={newUserRole}
+                    onChange={(e) => setNewUserRole(e.target.value as UserRole)}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-purple-500"
+                  >
+                    <option value="student">🎓 Học Viên</option>
+                    <option value="leader">⭐ Leader Chủ Trì</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-slate-300 font-semibold">Học phí</label>
+                  <select
+                    value={newUserTuition}
+                    onChange={(e) => setNewUserTuition(e.target.value as TuitionStatus)}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-purple-500"
+                  >
+                    <option value="paid">Đã Hoàn Thành</option>
+                    <option value="trial">Dùng Thử 3 Ngày</option>
+                    <option value="unpaid">Chưa Đóng</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-4 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setIsAddUserModalOpen(false)}
+                  className="px-4 py-2 rounded-xl glass-button text-slate-300 hover:text-white"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold shadow-lg cursor-pointer"
+                >
+                  Xác Nhận Thêm
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </main>
