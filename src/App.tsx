@@ -6,6 +6,8 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { LoginModal } from './components/LoginModal';
 import { TuitionModal } from './components/TuitionModal';
 import { CreateRoomModal } from './components/CreateRoomModal';
+import { AboutModal } from './components/AboutModal';
+import { UserProfileModal } from './components/UserProfileModal';
 import { ToastContainer } from './components/ToastContainer';
 import { INITIAL_ROOMS, INITIAL_USERS, DEFAULT_GUEST_USER } from './data/mockData';
 import { ChatMessage, ClubUser, EnglishRoom, ToastMessage } from './types';
@@ -18,18 +20,21 @@ export default function App() {
   const [rooms, setRooms] = useState<EnglishRoom[]>(INITIAL_ROOMS);
   const [currentRoom, setCurrentRoom] = useState<EnglishRoom>(INITIAL_ROOMS[0]);
 
+  // Modals & Profile
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
+  const [isTuitionModalOpen, setIsTuitionModalOpen] = useState<boolean>(false);
+  const [isCreateRoomModalOpen, setIsCreateRoomModalOpen] = useState<boolean>(false);
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState<boolean>(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
+  const [profileTargetUser, setProfileTargetUser] = useState<ClubUser>(DEFAULT_GUEST_USER);
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
   // Chat in active room
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     { id: 1, sender: 'Hệ Thống', text: 'Chào mừng bạn đến với phòng luyện nói CLB Tiếng Anh!', time: '19:30', isSystem: true },
     { id: 2, sender: 'Cô Hoàng Lan Anh', text: 'Hello everyone! Please raise your hand if you want to answer question 1.', time: '19:32' },
     { id: 3, sender: 'Bạn Học Viên', text: 'Cô ơi cho em hỏi từ "Delicacy" nhấn trọng âm ở đâu ạ?', time: '19:35' },
   ]);
-
-  // Modals & Toasts
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
-  const [isTuitionModalOpen, setIsTuitionModalOpen] = useState<boolean>(false);
-  const [isCreateRoomModalOpen, setIsCreateRoomModalOpen] = useState<boolean>(false);
-  const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   // Toast Notification
   const showToast = (text: string, type: 'indigo' | 'emerald' | 'amber' | 'rose' | 'slate' = 'indigo') => {
@@ -88,6 +93,21 @@ export default function App() {
     setCurrentUser(newUser);
   };
 
+  // Logout Handler
+  const handleLogout = () => {
+    setCurrentUser(DEFAULT_GUEST_USER);
+    if (currentView === 'admin') {
+      setCurrentView('lobby');
+    }
+    showToast('Đã đăng xuất tài khoản thành công', 'slate');
+  };
+
+  // Open Profile
+  const handleOpenProfile = (targetUser?: ClubUser) => {
+    setProfileTargetUser(targetUser || currentUser);
+    setIsProfileModalOpen(true);
+  };
+
   // Send message in room
   const handleSendChatMessage = (text: string) => {
     const now = new Date();
@@ -122,6 +142,9 @@ export default function App() {
         currentUser={currentUser}
         onOpenLoginModal={() => setIsLoginModalOpen(true)}
         onOpenTuitionModal={() => setIsTuitionModalOpen(true)}
+        onOpenAboutModal={() => setIsAboutModalOpen(true)}
+        onOpenProfileModal={handleOpenProfile}
+        onLogout={handleLogout}
       />
 
       {/* Main View Router */}
@@ -183,6 +206,20 @@ export default function App() {
         currentUser={currentUser}
         onCreateRoom={handleCreateRoom}
         onShowToast={showToast}
+      />
+
+      <AboutModal
+        isOpen={isAboutModalOpen}
+        onClose={() => setIsAboutModalOpen(false)}
+      />
+
+      <UserProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        user={profileTargetUser}
+        isSelf={profileTargetUser.id === currentUser.id}
+        onLogout={handleLogout}
+        onOpenTuitionModal={() => setIsTuitionModalOpen(true)}
       />
     </div>
   );

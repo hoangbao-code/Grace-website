@@ -52,7 +52,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold">
               <span className="animate-pulse">✨</span>
-              <span>CÂU LẠC BỘ TIẾNG ANH • HỆ THỐNG PHÒNG HỌC PHÂN CẤP TƯƠNG TÁC THỜI GIAN THỰC</span>
+              <span>GRACESPEAK CLUB • KHÔNG GIAN LUYỆN NÓI TIẾNG ANH PHẢN XẠ THỜI GIAN THỰC</span>
             </div>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white">
               Chào mừng,{' '}
