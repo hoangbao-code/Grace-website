@@ -1,0 +1,10 @@
+{
+  "name": "100-Day Mastery Club",
+  "description": "Gamified virtual co-working & study platform featuring 100-day habit streaks, synchronized Pomodoro rooms, Web Audio ambient soundscapes, 2D Lo-fi avatars, webcam integration, and emoji particle reactions.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "display-capture"
+  ],
+  "majorCapabilities": []
+}
