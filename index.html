@@ -15,6 +15,21 @@
       href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
+    <!-- Tự động làm sạch URL, loại bỏ mã theo dõi ?fbclid=... của Facebook và UTM tags -->
+    <script>
+      (function() {
+        try {
+          if (window.location.search && (window.location.search.indexOf('fbclid=') !== -1 || window.location.search.indexOf('utm_') !== -1)) {
+            var cleanUrl = window.location.protocol + '//' + window.location.host + window.location.pathname;
+            if (window.history && window.history.replaceState) {
+              window.history.replaceState({}, document.title, cleanUrl);
+            }
+          }
+        } catch (e) {
+          console.error('URL cleaner error:', e);
+        }
+      })();
+    </script>
   </head>
   <body class="bg-[#070A12] text-slate-100 font-sans min-h-screen overflow-x-hidden selection:bg-purple-500/30 selection:text-purple-200">
     <div id="root"></div>
