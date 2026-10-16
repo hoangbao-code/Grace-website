@@ -8,6 +8,7 @@ import {
   Trash2,
   Calendar,
   Sparkles,
+  Flame,
 } from 'lucide-react';
 import { ClubUser, EnglishLevel, EnglishRoom } from '../types';
 
@@ -17,6 +18,7 @@ interface LobbyViewProps {
   onJoinRoom: (room: EnglishRoom) => void;
   onCreateRoomModal: () => void;
   onDeleteRoom?: (roomId: string) => void;
+  onOpenStreakModal?: () => void;
   onShowToast: (text: string, type?: 'indigo' | 'emerald' | 'amber' | 'rose') => void;
 }
 
@@ -26,6 +28,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
   onJoinRoom,
   onCreateRoomModal,
   onDeleteRoom,
+  onOpenStreakModal,
   onShowToast,
 }) => {
   const [selectedLevel, setSelectedLevel] = useState<EnglishLevel | 'all'>('all');
@@ -131,11 +134,18 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
               {rooms.length} phòng trong sảnh
             </p>
           </div>
-          <div className="bg-slate-900/40 p-3 rounded-xl border border-white/5">
-            <span className="text-slate-400">Ngày gia nhập</span>
-            <p className="text-sm font-bold text-indigo-300 mt-1 flex items-center gap-1 font-mono">
-              <Calendar className="w-3.5 h-3.5 text-indigo-400" />
-              <span>{currentUser.joinDate}</span>
+          <div
+            onClick={onOpenStreakModal}
+            className="bg-slate-900/40 p-3 rounded-xl border border-orange-500/25 hover:border-orange-500/50 hover:bg-orange-500/10 cursor-pointer transition-all group"
+            title="Bấm để xem chi tiết chuỗi Streak học tập (Duolingo Style)"
+          >
+            <div className="flex items-center justify-between text-slate-400">
+              <span>Chuỗi Streak học</span>
+              <Flame className="w-3.5 h-3.5 text-orange-400 fill-current group-hover:scale-125 transition-transform" />
+            </div>
+            <p className="text-sm font-black text-orange-400 mt-1 flex items-center gap-1">
+              <span>{currentUser.streakDays || 0} ngày liên tiếp</span>
+              <span className="text-xs">🔥</span>
             </p>
           </div>
         </div>

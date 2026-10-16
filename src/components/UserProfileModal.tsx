@@ -122,7 +122,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               <span className="text-slate-400 flex items-center gap-1">
                 <Flame className="w-3.5 h-3.5 text-amber-500" /> Chuỗi học tập
               </span>
-              <p className="font-bold text-amber-400">{user.streakDays || 1} Ngày liên tiếp 🔥</p>
+              <p className="font-bold text-amber-400">{user.streakDays || 0} Ngày liên tiếp 🔥</p>
             </div>
             <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
               <span className="text-slate-400 flex items-center gap-1">

@@ -34,6 +34,7 @@ interface RoomViewProps {
   chatMessages: ChatMessage[];
   onBackToLobby: () => void;
   onSendChatMessage: (text: string) => void;
+  onClaimStreak?: () => void;
   onShowToast: (text: string, type?: 'indigo' | 'emerald' | 'amber' | 'rose') => void;
 }
 
@@ -60,6 +61,7 @@ export const RoomView: React.FC<RoomViewProps> = ({
   chatMessages,
   onBackToLobby,
   onSendChatMessage,
+  onClaimStreak,
   onShowToast,
 }) => {
   // Media states
@@ -821,6 +823,18 @@ export const RoomView: React.FC<RoomViewProps> = ({
                 <span className="text-sm">🎡</span>
                 <span>Vòng Quay May Mắn</span>
               </button>
+
+              {/* TÍNH NĂNG STREAK: Nhận Streak Buổi Học */}
+              {onClaimStreak && (
+                <button
+                  onClick={onClaimStreak}
+                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 hover:from-orange-400 hover:to-yellow-400 text-slate-950 text-xs font-black flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-lg shadow-orange-500/25"
+                  title="Hoàn thành buổi học hôm nay và thắp sáng ngọn lửa Streak!"
+                >
+                  <span className="text-sm">🔥</span>
+                  <span>Nhận Streak Buổi Học</span>
+                </button>
+              )}
             </div>
 
             {/* Mic / Cam / Leave Controls */}

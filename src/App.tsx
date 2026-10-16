@@ -8,6 +8,7 @@ import { LoginModal } from './components/LoginModal';
 import { TuitionModal } from './components/TuitionModal';
 import { CreateRoomModal } from './components/CreateRoomModal';
 import { UserProfileModal } from './components/UserProfileModal';
+import { StreakCelebrationModal } from './components/StreakCelebrationModal';
 import { ToastContainer } from './components/ToastContainer';
 import { INITIAL_ROOMS, INITIAL_USERS, DEFAULT_GUEST_USER } from './data/mockData';
 import { ChatMessage, ClubUser, EnglishRoom, ToastMessage } from './types';
@@ -64,8 +65,66 @@ export default function App() {
   const [isTuitionModalOpen, setIsTuitionModalOpen] = useState<boolean>(false);
   const [isCreateRoomModalOpen, setIsCreateRoomModalOpen] = useState<boolean>(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
+  const [isStreakModalOpen, setIsStreakModalOpen] = useState<boolean>(false);
+  const [isJustClaimedStreak, setIsJustClaimedStreak] = useState<boolean>(false);
   const [profileTargetUser, setProfileTargetUser] = useState<ClubUser>(DEFAULT_GUEST_USER);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  // Xử lý Giữ Streak Học Tập (Duolingo & TikTok style)
+  const handleClaimStreak = () => {
+    if (currentUser.id === 'guest-user') {
+      setIsLoginModalOpen(true);
+      showToast('Vui lòng đăng nhập để ghi nhận chuỗi Streak của bạn nhé!', 'amber');
+      return;
+    }
+
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+
+    if (currentUser.lastStreakDate === todayStr) {
+      setIsJustClaimedStreak(false);
+      setIsStreakModalOpen(true);
+      showToast('Hôm nay bạn đã thắp sáng ngọn lửa Streak rồi! Tiếp tục luyện nói nhé! 🔥', 'amber');
+      return;
+    }
+
+    let nextStreak = 1;
+    if (currentUser.lastStreakDate === yesterdayStr) {
+      nextStreak = (currentUser.streakDays || 0) + 1;
+    }
+
+    const updatedUser: ClubUser = {
+      ...currentUser,
+      streakDays: nextStreak,
+      lastStreakDate: todayStr,
+    };
+
+    setCurrentUser(updatedUser);
+    try {
+      localStorage.setItem('grace_current_user', JSON.stringify(updatedUser));
+    } catch (e) {
+      console.error(e);
+    }
+
+    // Đồng bộ vào mảng users
+    setUsers((prev) => {
+      const updated = prev.map((u) => (u.id === updatedUser.id ? updatedUser : u));
+      try {
+        localStorage.setItem('fluently_clean_users_v1', JSON.stringify(updated));
+      } catch (e) {
+        console.error(e);
+      }
+      return updated;
+    });
+
+    setIsJustClaimedStreak(true);
+    setIsStreakModalOpen(true);
+    showToast(`🎉 Chúc mừng bạn đã tăng chuỗi Streak lên ${nextStreak} ngày liên tiếp! 🔥`, 'emerald');
+  };
 
   // Chat in active room: Chỉ có tin nhắn hệ thống chào mừng, web mới sạch sẽ
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
@@ -282,6 +341,10 @@ export default function App() {
         onOpenLoginModal={() => setIsLoginModalOpen(true)}
         onOpenTuitionModal={() => setIsTuitionModalOpen(true)}
         onOpenProfileModal={handleOpenProfile}
+        onOpenStreakModal={() => {
+          setIsJustClaimedStreak(false);
+          setIsStreakModalOpen(true);
+        }}
         onLogout={handleLogout}
       />
 
@@ -303,6 +366,10 @@ export default function App() {
             onJoinRoom={handleJoinRoom}
             onCreateRoomModal={() => setIsCreateRoomModalOpen(true)}
             onDeleteRoom={handleDeleteRoom}
+            onOpenStreakModal={() => {
+              setIsJustClaimedStreak(false);
+              setIsStreakModalOpen(true);
+            }}
             onShowToast={showToast}
           />
         ) : currentView === 'room' && currentRoom ? (
@@ -313,6 +380,7 @@ export default function App() {
             chatMessages={chatMessages}
             onBackToLobby={() => setCurrentView('lobby')}
             onSendChatMessage={handleSendChatMessage}
+            onClaimStreak={handleClaimStreak}
             onShowToast={showToast}
           />
         ) : (
@@ -367,6 +435,14 @@ export default function App() {
         isSelf={profileTargetUser.id === currentUser.id}
         onLogout={handleLogout}
         onOpenTuitionModal={() => setIsTuitionModalOpen(true)}
+      />
+
+      {/* Streak Flame Celebration Modal (Duolingo & TikTok Style) */}
+      <StreakCelebrationModal
+        isOpen={isStreakModalOpen}
+        user={currentUser}
+        onClose={() => setIsStreakModalOpen(false)}
+        isJustClaimed={isJustClaimedStreak}
       />
     </div>
   );

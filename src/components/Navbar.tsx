@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutGrid, ShieldAlert, LogIn, LogOut, Crown, UserCheck, Sparkles, Video } from 'lucide-react';
+import { LayoutGrid, ShieldAlert, LogIn, LogOut, Crown, UserCheck, Sparkles, Video, Flame } from 'lucide-react';
 import { ClubUser } from '../types';
 import { Logo } from './Logo';
 
@@ -10,6 +10,7 @@ interface NavbarProps {
   onOpenLoginModal: () => void;
   onOpenTuitionModal: () => void;
   onOpenProfileModal: (user: ClubUser) => void;
+  onOpenStreakModal?: () => void;
   onLogout: () => void;
 }
 
@@ -20,6 +21,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenLoginModal,
   onOpenTuitionModal,
   onOpenProfileModal,
+  onOpenStreakModal,
   onLogout,
 }) => {
   const isGuest = currentUser.id === 'guest-user';
@@ -134,8 +136,18 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>Đăng Nhập / Đăng Ký</span>
             </button>
           ) : (
-            /* Logged-In State: User Profile Pill + Logout Button */
+            /* Logged-In State: User Profile Pill + Streak + Logout Button */
             <div className="flex items-center gap-2">
+              {/* Streak Flame Pill (Duolingo Style) */}
+              <button
+                onClick={onOpenStreakModal}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-500/15 border border-orange-500/35 hover:border-orange-500/70 hover:bg-orange-500/25 text-orange-400 text-xs font-black transition-all cursor-pointer shadow-md shadow-orange-500/10 active:scale-95 group"
+                title="Bấm để xem chuỗi Streak học tập (Duolingo Style)"
+              >
+                <Flame className="w-4 h-4 fill-current text-orange-500 group-hover:scale-125 transition-transform animate-pulse" />
+                <span className="tracking-tight">{currentUser.streakDays || 0}</span>
+              </button>
+
               {/* Profile Pill Trigger */}
               <button
                 onClick={() => onOpenProfileModal(currentUser)}

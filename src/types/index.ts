@@ -12,6 +12,7 @@ export interface ClubUser {
   phone?: string;
   joinDate: string;
   streakDays: number;
+  lastStreakDate?: string;
 }
 
 export interface EnglishRoom {
