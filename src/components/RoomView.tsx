@@ -38,7 +38,15 @@ interface RoomViewProps {
   onShowToast: (text: string, type?: 'indigo' | 'emerald' | 'amber' | 'rose') => void;
 }
 
-type FaceFilterType = 'rose' | 'kiss' | 'crown' | 'glasses' | 'lightbulb' | 'tomato';
+type FaceFilterType =
+  | 'rose'
+  | 'kiss'
+  | 'crown'
+  | 'glasses'
+  | 'lightbulb'
+  | 'tomato'
+  | 'yellow_card'
+  | 'fire_aura';
 
 interface ActiveFaceFilter {
   targetId: string;
@@ -53,6 +61,23 @@ interface ActiveSpeechBubble {
   senderName: string;
   text: string;
   id: number;
+}
+
+interface GiftBanner {
+  id: number;
+  senderName: string;
+  targetName: string;
+  giftName: string;
+  giftIcon: string;
+}
+
+interface FlyingHeart {
+  id: number;
+  x: number;
+  y: number;
+  color: string;
+  scale: number;
+  emoji: string;
 }
 
 export const RoomView: React.FC<RoomViewProps> = ({
@@ -74,6 +99,22 @@ export const RoomView: React.FC<RoomViewProps> = ({
 
   // Floating Emojis Animation
   const [floatingEmojis, setFloatingEmojis] = useState<FloatingEmoji[]>([]);
+
+  // TikTok Live: VIP Sliding Gift Banners
+  const [activeGiftBanners, setActiveGiftBanners] = useState<GiftBanner[]>([]);
+
+  // TikTok Live: Rapid Tap-to-Heart & Combo Multipliers
+  const [comboCount, setComboCount] = useState<number>(0);
+  const [comboTargetId, setComboTargetId] = useState<string | null>(null);
+  const [flyingHearts, setFlyingHearts] = useState<FlyingHeart[]>([]);
+  const comboTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // TikTok Live: Room Hype Meter (0-100%) & Fever Mode
+  const [roomHype, setRoomHype] = useState<number>(38);
+  const [isFeverMode, setIsFeverMode] = useState<boolean>(false);
+
+  // TikTok Live: Screen Shake on Impact
+  const [impactTargetId, setImpactTargetId] = useState<string | null>(null);
 
   // TÍNH NĂNG 1: Face AR Filters & Targeted Gifts
   const [activeFaceFilters, setActiveFaceFilters] = useState<ActiveFaceFilter[]>([]);
@@ -129,12 +170,15 @@ export const RoomView: React.FC<RoomViewProps> = ({
     }
   }, [isCamOn]);
 
-  // Giải phóng camera khi rời phòng học
+  // Giải phóng camera và timer khi rời phòng học
   useEffect(() => {
     return () => {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
+      }
+      if (comboTimerRef.current) {
+        clearTimeout(comboTimerRef.current);
       }
     };
   }, []);
@@ -244,8 +288,102 @@ export const RoomView: React.FC<RoomViewProps> = ({
     onShowToast('👏 Cả lớp cùng vỗ tay tán thưởng!', 'amber');
   };
 
-  // TÍNH NĂNG 1: Tặng Quà & Trigger Face Filter
+  // TikTok Live: Tap to Heart & Combo System
+  const handleCardTap = (targetId: string, targetName: string, clientX?: number, clientY?: number) => {
+    const isSameTarget = comboTargetId === targetId;
+    const newCombo = isSameTarget ? comboCount + 1 : 1;
+
+    setComboTargetId(targetId);
+    setComboCount(newCombo);
+
+    // Escalating pitch Web Audio
+    audioEngine.playComboPop(newCombo);
+
+    // Heart particles originating from click coordinate or center
+    const posX = clientX ?? window.innerWidth / 2 + (Math.random() * 60 - 30);
+    const posY = clientY ?? window.innerHeight / 2 + (Math.random() * 40 - 20);
+
+    const colors = ['#ec4899', '#f43f5e', '#a855f7', '#06b6d4', '#eab308'];
+    const emojis = ['💖', '🔥', '❤️', '✨', '⚡'];
+    const newHeart: FlyingHeart = {
+      id: Date.now() + Math.random(),
+      x: posX,
+      y: posY,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      scale: 0.85 + Math.min(newCombo * 0.04, 1.25),
+      emoji: emojis[Math.floor(Math.random() * emojis.length)],
+    };
+
+    setFlyingHearts((prev) => [...prev.slice(-35), newHeart]);
+    setTimeout(() => {
+      setFlyingHearts((prev) => prev.filter((h) => h.id !== newHeart.id));
+    }, 1200);
+
+    // Increase Room Hype Meter
+    setRoomHype((prev) => {
+      const next = Math.min(100, prev + 2.5);
+      if (next >= 100 && !isFeverMode) {
+        setIsFeverMode(true);
+        audioEngine.playFeverTime();
+        confetti({ particleCount: 120, spread: 85, origin: { y: 0.5 } });
+        onShowToast('🎉 FEVER TIME! CẢ LỚP ĐANG BÙNG CHÁY NĂNG LƯỢNG 100%! 🔥', 'amber');
+        setTimeout(() => {
+          setIsFeverMode(false);
+          setRoomHype(30);
+        }, 12000);
+      }
+      return next;
+    });
+
+    // Milestone celebration
+    if (newCombo === 10 || newCombo === 25 || newCombo === 50 || newCombo === 100) {
+      audioEngine.playTaskVictory();
+      confetti({
+        particleCount: 35 + newCombo,
+        spread: 60,
+        origin: { x: posX / window.innerWidth, y: posY / window.innerHeight },
+      });
+      onShowToast(`🔥 SIÊU COMBO x${newCombo} TẶNG CHO ${targetName.toUpperCase()}!`, 'amber');
+    }
+
+    // Reset combo after 1.8s silence
+    if (comboTimerRef.current) clearTimeout(comboTimerRef.current);
+    comboTimerRef.current = setTimeout(() => {
+      setComboCount(0);
+      setComboTargetId(null);
+    }, 1800);
+  };
+
+  // TikTok Live: Tặng Quà & Trigger Interactive Props
   const triggerFaceFilter = (targetId: string, targetName: string, filterType: FaceFilterType) => {
+    const giftLabels: Record<FaceFilterType, { name: string; icon: string }> = {
+      tomato: { name: 'Cà Chua Splat 2.0', icon: '🍅' },
+      glasses: { name: 'Kính Thug Life 2.0', icon: '🕶️' },
+      crown: { name: 'Mũ Cử Nhân IELTS 9.0', icon: '👑' },
+      yellow_card: { name: 'Thẻ Phạt Tiếng Việt', icon: '🟨' },
+      fire_aura: { name: 'Hào Quang Lửa Super Saiyan', icon: '🔥' },
+      rose: { name: 'Bông Hồng Tươi Thắm', icon: '🌹' },
+      kiss: { name: 'Bắn Tim Nồng Cháy', icon: '💋' },
+      lightbulb: { name: 'Bóng Đèn Sáng Kiến', icon: '💡' },
+    };
+
+    const gift = giftLabels[filterType];
+
+    // Trigger Specific Audio & Visual Impact
+    if (filterType === 'tomato') {
+      audioEngine.playTomatoSplat();
+      setImpactTargetId(targetId);
+      setTimeout(() => setImpactTargetId(null), 500);
+    } else if (filterType === 'glasses') {
+      audioEngine.playThugLife();
+    } else if (filterType === 'yellow_card') {
+      audioEngine.playRefereeWhistle();
+    } else if (filterType === 'crown') {
+      audioEngine.playCrownFanfare();
+    } else {
+      audioEngine.playTaskVictory();
+    }
+
     const newFilter: ActiveFaceFilter = {
       targetId,
       targetName,
@@ -254,24 +392,30 @@ export const RoomView: React.FC<RoomViewProps> = ({
       id: Date.now() + Math.random(),
     };
 
-    audioEngine.playTaskVictory();
     setActiveFaceFilters((prev) => [...prev, newFilter]);
     setActiveGiftMenuTarget(null);
 
-    const giftLabels: Record<FaceFilterType, string> = {
-      rose: '🌹 Bông Hồng Tươi Thắm',
-      kiss: '💋 Nụ Hôn & Bắn Tim',
-      crown: '👑 Vương Miện Hoàng Gia',
-      glasses: '🕶️ Kính Râm Thug Life',
-      lightbulb: '💡 Bóng Đèn Sáng Kiến',
-      tomato: '🍅 Quả Cà Chua Hài Hước',
-    };
+    // Boost Room Hype
+    setRoomHype((prev) => Math.min(100, prev + 10));
 
-    onShowToast(`Đã tặng ${giftLabels[filterType]} cho ${targetName}!`, 'emerald');
+    // VIP Gift Banner
+    const banner: GiftBanner = {
+      id: Date.now() + Math.random(),
+      senderName: currentUser.name,
+      targetName,
+      giftName: gift.name,
+      giftIcon: gift.icon,
+    };
+    setActiveGiftBanners((prev) => [...prev, banner]);
+    setTimeout(() => {
+      setActiveGiftBanners((prev) => prev.filter((b) => b.id !== banner.id));
+    }, 4000);
+
+    onShowToast(`Đã tặng ${gift.icon} ${gift.name} cho ${targetName}!`, 'emerald');
 
     setTimeout(() => {
       setActiveFaceFilters((prev) => prev.filter((f) => f.id !== newFilter.id));
-    }, 4500);
+    }, 4800);
   };
 
   // TÍNH NĂNG 6: Trigger Comic Speech Bubble
@@ -351,7 +495,7 @@ export const RoomView: React.FC<RoomViewProps> = ({
         ...participants.filter((p) => p.role !== 'leader'),
       ];
 
-  // Helper to render Face Filters overlay on camera
+  // Helper to render Face Filters overlay on camera (TikTok Live Interactive Props)
   const renderFaceFilterOverlay = (targetId: string) => {
     const filters = activeFaceFilters.filter((f) => f.targetId === targetId);
     if (filters.length === 0) return null;
@@ -360,7 +504,100 @@ export const RoomView: React.FC<RoomViewProps> = ({
       <div className="absolute inset-0 pointer-events-none z-30 flex items-center justify-center overflow-hidden">
         {filters.map((f) => (
           <div key={f.id} className="relative w-full h-full flex flex-col items-center justify-center">
-            {/* 1. Rose Filter */}
+            {/* 1. Tomato Splat 2.0 with Dripping Sauce & Screen Shake */}
+            {f.filterType === 'tomato' && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center overflow-hidden pointer-events-none">
+                {/* Expanding Splat Mark */}
+                <div className="relative animate-splat-tomato flex items-center justify-center">
+                  <span className="text-8xl sm:text-9xl drop-shadow-[0_15px_30px_rgba(239,68,68,1)] select-none">
+                    🍅
+                  </span>
+                  <div className="w-32 h-16 bg-red-600/70 rounded-full blur-xl absolute -bottom-3 -z-10" />
+                </div>
+                {/* 3 Dripping Sauce Streams */}
+                <div
+                  className="absolute top-1/2 left-1/4 w-3 bg-red-600/90 rounded-b-full animate-sauce-drip shadow-[0_0_10px_rgba(220,38,38,0.8)]"
+                  style={{ height: '70px', animationDelay: '0.1s' }}
+                />
+                <div
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 w-4 bg-red-600/95 rounded-b-full animate-sauce-drip shadow-[0_0_12px_rgba(220,38,38,0.9)]"
+                  style={{ height: '90px', animationDelay: '0s' }}
+                />
+                <div
+                  className="absolute top-1/2 right-1/4 w-3 bg-red-600/90 rounded-b-full animate-sauce-drip shadow-[0_0_10px_rgba(220,38,38,0.8)]"
+                  style={{ height: '60px', animationDelay: '0.25s' }}
+                />
+                <div className="absolute top-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-red-600 text-white font-black text-[10px] uppercase tracking-wider shadow-lg animate-bounce">
+                  SPLAT! CÀ CHUA BẮN 🍅
+                </div>
+              </div>
+            )}
+
+            {/* 2. Thug Life 2.0: Shades + Cigar Smoke + Gold Chain */}
+            {f.filterType === 'glasses' && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <div className="absolute top-[30%] left-1/2 -translate-x-1/2 animate-drop-bounce flex flex-col items-center">
+                  <span className="text-6xl sm:text-7xl drop-shadow-[0_12px_24px_rgba(0,0,0,0.9)] select-none">
+                    🕶️
+                  </span>
+                </div>
+                <div className="absolute bottom-16 right-8 animate-pulse flex items-center gap-1">
+                  <span className="text-3xl select-none">🚬</span>
+                  <span className="text-lg opacity-70 animate-ping">💨</span>
+                </div>
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 select-none text-3xl drop-shadow-lg animate-bounce">
+                  ⛓️
+                </div>
+                <div className="absolute top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-slate-900 border border-amber-400 text-amber-300 font-black text-[10px] tracking-wider uppercase shadow-xl animate-bounce">
+                  THUG LIFE SPEECH 😎
+                </div>
+              </div>
+            )}
+
+            {/* 3. Golden Crown & Academic Glory */}
+            {f.filterType === 'crown' && (
+              <div className="absolute inset-0 flex flex-col items-center justify-start pointer-events-none">
+                <div className="absolute inset-0 bg-gradient-to-b from-amber-500/25 via-amber-400/5 to-transparent animate-pulse" />
+                <div className="absolute top-2 left-1/2 -translate-x-1/2 animate-drop-filter flex flex-col items-center z-10">
+                  <span className="text-6xl sm:text-7xl drop-shadow-[0_10px_30px_rgba(245,158,11,1)] select-none">
+                    👑
+                  </span>
+                  <span className="text-[10px] font-black px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 uppercase tracking-widest mt-1 shadow-xl">
+                    IELTS 9.0 MASTER 🎓
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* 4. Yellow Card - Cấm nói tiếng Việt */}
+            {f.filterType === 'yellow_card' && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <div className="animate-drop-bounce flex flex-col items-center">
+                  <div className="w-16 h-22 rounded-xl bg-gradient-to-br from-yellow-300 to-amber-500 border-2 border-white shadow-[0_10px_30px_rgba(234,179,8,0.9)] flex items-center justify-center text-slate-950 font-black text-2xl rotate-6">
+                    🟨
+                  </div>
+                  <span className="mt-2 px-3 py-1 rounded-full bg-rose-600 text-white font-black text-[11px] uppercase tracking-wider shadow-xl animate-bounce">
+                    ⚠️ 100% ENGLISH ONLY!
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* 5. Super Saiyan Fire Aura */}
+            {f.filterType === 'fire_aura' && (
+              <div className="absolute inset-0 flex flex-col items-center justify-between pointer-events-none p-3">
+                <div className="px-3 py-1 rounded-full bg-gradient-to-r from-orange-500 to-red-600 text-white font-black text-[10px] uppercase tracking-widest shadow-xl animate-bounce">
+                  🔥 ON FIRE! BẮN TIẾNG ANH CỰC CHÁY 🔥
+                </div>
+                <div className="flex gap-4 text-3xl animate-pulse">
+                  <span>⚡</span>
+                  <span>🔥</span>
+                  <span>⚡</span>
+                </div>
+              </div>
+            )}
+
+            {/* 6. Rose Filter */}
             {f.filterType === 'rose' && (
               <div className="relative animate-wiggle-kiss flex flex-col items-center">
                 <span className="text-6xl sm:text-7xl drop-shadow-[0_10px_20px_rgba(244,63,94,0.7)]">
@@ -371,46 +608,18 @@ export const RoomView: React.FC<RoomViewProps> = ({
               </div>
             )}
 
-            {/* 2. Kiss / Heart Filter */}
+            {/* 7. Kiss / Heart Filter */}
             {f.filterType === 'kiss' && (
               <div className="relative animate-wiggle-kiss flex flex-col items-center">
                 <span className="text-6xl sm:text-7xl drop-shadow-[0_10px_25px_rgba(236,72,153,0.8)]">
                   💋
                 </span>
-                <span className="text-3xl absolute -top-3 -right-3 animate-bounce">
-                  💖
-                </span>
-                <span className="text-2xl absolute -bottom-2 -left-2 animate-pulse">
-                  💕
-                </span>
+                <span className="text-3xl absolute -top-3 -right-3 animate-bounce">💖</span>
+                <span className="text-2xl absolute -bottom-2 -left-2 animate-pulse">💕</span>
               </div>
             )}
 
-            {/* 3. Golden Crown Filter */}
-            {f.filterType === 'crown' && (
-              <div className="absolute top-2 left-1/2 -translate-x-1/2 animate-drop-filter flex flex-col items-center">
-                <span className="text-5xl sm:text-6xl drop-shadow-[0_8px_20px_rgba(245,158,11,0.9)]">
-                  👑
-                </span>
-                <span className="text-xs font-black px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 uppercase tracking-widest mt-1 shadow-lg">
-                  BEST SPEAKER
-                </span>
-              </div>
-            )}
-
-            {/* 4. Cool Glasses Filter */}
-            {f.filterType === 'glasses' && (
-              <div className="absolute top-1/3 left-1/2 -translate-x-1/2 animate-drop-filter flex flex-col items-center">
-                <span className="text-5xl sm:text-6xl drop-shadow-[0_8px_16px_rgba(0,0,0,0.8)]">
-                  🕶️
-                </span>
-                <span className="text-amber-400 text-lg absolute -right-3 -top-2 animate-ping">
-                  ✨
-                </span>
-              </div>
-            )}
-
-            {/* 5. Eureka Lightbulb Filter */}
+            {/* 8. Eureka Lightbulb Filter */}
             {f.filterType === 'lightbulb' && (
               <div className="absolute top-2 left-1/2 -translate-x-1/2 animate-bounce flex flex-col items-center">
                 <span className="text-5xl sm:text-6xl drop-shadow-[0_0_30px_rgba(250,204,21,1)]">
@@ -419,16 +628,6 @@ export const RoomView: React.FC<RoomViewProps> = ({
                 <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-yellow-400 text-slate-950 uppercase tracking-widest mt-1 shadow-lg">
                   EUREKA!
                 </span>
-              </div>
-            )}
-
-            {/* 6. Tomato Splat Filter */}
-            {f.filterType === 'tomato' && (
-              <div className="relative animate-splat-tomato flex flex-col items-center">
-                <span className="text-7xl sm:text-8xl drop-shadow-[0_10px_25px_rgba(239,68,68,0.9)]">
-                  🍅
-                </span>
-                <div className="w-24 h-12 bg-red-600/60 rounded-full blur-md absolute -bottom-2 -z-10" />
               </div>
             )}
 
@@ -461,34 +660,47 @@ export const RoomView: React.FC<RoomViewProps> = ({
     );
   };
 
-  // Gift Selector Menu Component
+  // TikTok Live: Gift Selector Menu Component (8 Đạo Cụ Tương Tác)
   const renderGiftMenu = (targetId: string, targetName: string) => {
     if (activeGiftMenuTarget !== targetId) return null;
 
     const giftOptions: { type: FaceFilterType; icon: string; name: string }[] = [
-      { type: 'rose', icon: '🌹', name: 'Bông Hồng' },
-      { type: 'kiss', icon: '💋', name: 'Nụ Hôn' },
-      { type: 'crown', icon: '👑', name: 'Vương Miện' },
-      { type: 'glasses', icon: '🕶️', name: 'Kính Râm' },
+      { type: 'tomato', icon: '🍅', name: 'Cà Chua Splat' },
+      { type: 'glasses', icon: '🕶️', name: 'Kính Thug Life' },
+      { type: 'crown', icon: '👑', name: 'Mũ IELTS 9.0' },
+      { type: 'yellow_card', icon: '🟨', name: 'Thẻ Phạt Tiếng Việt' },
+      { type: 'fire_aura', icon: '🔥', name: 'Hào Quang Lửa' },
+      { type: 'rose', icon: '🌹', name: 'Hoa Hồng VIP' },
+      { type: 'kiss', icon: '💋', name: 'Bắn Tim Yêu' },
       { type: 'lightbulb', icon: '💡', name: 'Sáng Kiến' },
-      { type: 'tomato', icon: '🍅', name: 'Cà Chua' },
     ];
 
     return (
-      <div className="absolute top-12 right-2 z-40 glass-panel rounded-2xl p-2 border border-white/20 shadow-2xl space-y-1.5 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200">
-        <div className="text-[10px] font-extrabold text-slate-300 px-2 pt-1 border-b border-white/10 pb-1">
-          Tặng Filter Lên Camera:
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="absolute top-12 right-2 z-40 glass-panel rounded-2xl p-2.5 border border-white/20 shadow-2xl space-y-2 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200 w-64"
+      >
+        <div className="text-[10px] font-extrabold text-amber-300 px-2 pt-1 border-b border-white/10 pb-1.5 flex items-center justify-between">
+          <span>TẶNG ĐẠO CỤ LIVE TIKTOK:</span>
+          <span className="text-[9px] text-slate-400 font-normal">Chạm để gửi</span>
         </div>
-        <div className="grid grid-cols-3 gap-1.5">
+        <div className="grid grid-cols-4 gap-1.5">
           {giftOptions.map((g) => (
             <button
               key={g.type}
-              onClick={() => triggerFaceFilter(targetId, targetName, g.type)}
-              className="p-1.5 rounded-xl bg-slate-900/80 hover:bg-indigo-600/40 border border-white/5 hover:border-indigo-400 transition-all flex flex-col items-center gap-0.5 cursor-pointer group active:scale-90"
+              onClick={(e) => {
+                e.stopPropagation();
+                triggerFaceFilter(targetId, targetName, g.type);
+              }}
+              className="p-1.5 rounded-xl bg-slate-900/80 hover:bg-gradient-to-tr hover:from-purple-600/40 hover:to-indigo-600/40 border border-white/5 hover:border-amber-400/60 transition-all flex flex-col items-center gap-1 cursor-pointer group active:scale-90"
               title={g.name}
             >
-              <span className="text-xl group-hover:scale-125 transition-transform">{g.icon}</span>
-              <span className="text-[9px] text-slate-300 font-bold">{g.name}</span>
+              <span className="text-2xl group-hover:scale-125 transition-transform drop-shadow-md">
+                {g.icon}
+              </span>
+              <span className="text-[9px] text-slate-300 font-bold text-center leading-tight">
+                {g.name}
+              </span>
             </button>
           ))}
         </div>
@@ -498,6 +710,55 @@ export const RoomView: React.FC<RoomViewProps> = ({
 
   return (
     <main className="flex-1 flex flex-col w-full h-[calc(100vh-65px)] overflow-hidden relative">
+      {/* TikTok Live: Flying Hearts Overlay */}
+      <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+        {flyingHearts.map((h) => (
+          <span
+            key={h.id}
+            className="absolute select-none"
+            style={{
+              left: `${h.x}px`,
+              top: `${h.y}px`,
+              fontSize: `${24 * h.scale}px`,
+              animation: 'floatHeart 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards',
+              filter: `drop-shadow(0 0 10px ${h.color})`,
+            }}
+          >
+            {h.emoji}
+          </span>
+        ))}
+        <style>{`
+          @keyframes floatHeart {
+            0% { opacity: 1; transform: translate(0, 0) scale(0.65); }
+            50% { opacity: 0.95; transform: translate(${Math.sin(Date.now()) * 25}px, -70px) scale(1.2); }
+            100% { opacity: 0; transform: translate(0, -140px) scale(1.6); }
+          }
+        `}</style>
+      </div>
+
+      {/* TikTok Live: VIP Gift Sliding Banner */}
+      <div className="fixed top-20 left-4 z-50 pointer-events-none max-w-sm w-full space-y-2">
+        {activeGiftBanners.map((b) => (
+          <div
+            key={b.id}
+            className="animate-gift-banner flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-slate-950/95 via-purple-950/90 to-slate-950/95 border-2 border-amber-400/80 shadow-[0_10px_35px_rgba(245,158,11,0.4)] backdrop-blur-xl"
+          >
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-400 to-orange-500 p-0.5 flex items-center justify-center flex-shrink-0 shadow-lg text-2xl">
+              {b.giftIcon}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] font-extrabold text-amber-300 truncate">
+                {b.senderName} vừa gửi tặng!
+              </p>
+              <p className="text-xs font-black text-white truncate">
+                {b.giftName} ──► <span className="text-cyan-300">{b.targetName}</span>
+              </p>
+            </div>
+            <span className="text-sm animate-ping">✨</span>
+          </div>
+        ))}
+      </div>
+
       {/* Floating Emojis Overlay */}
       <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
         {floatingEmojis.map((item) => (
@@ -557,10 +818,31 @@ export const RoomView: React.FC<RoomViewProps> = ({
           </div>
         </div>
 
-        {/* Center: Topic summary */}
-        <div className="hidden md:flex items-center gap-2 bg-slate-950/70 px-4 py-1.5 rounded-xl border border-white/10">
-          <span className="text-xs text-slate-400 font-semibold">Chủ đề:</span>
-          <span className="text-xs text-white font-bold max-w-xs truncate">{room.topic}</span>
+        {/* Center: Topic summary & Room Hype Meter */}
+        <div className="hidden md:flex items-center gap-3">
+          <div className="flex items-center gap-2 bg-slate-950/70 px-4 py-1.5 rounded-xl border border-white/10">
+            <span className="text-xs text-slate-400 font-semibold">Chủ đề:</span>
+            <span className="text-xs text-white font-bold max-w-xs truncate">{room.topic}</span>
+          </div>
+
+          {/* TikTok Live: Room Hype Meter */}
+          <div className="flex items-center gap-2 bg-slate-950/80 px-3.5 py-1.5 rounded-xl border border-white/10 shadow-lg">
+            <span className="text-xs text-amber-400 font-extrabold flex items-center gap-1">
+              <span className={isFeverMode ? 'animate-bounce text-base' : 'animate-pulse'}>🔥</span>
+              <span>{isFeverMode ? 'FEVER TIME!' : 'Nhiệt Lượng:'}</span>
+            </span>
+            <div className="w-20 h-2 bg-slate-800 rounded-full overflow-hidden p-0.5 border border-white/10">
+              <div
+                className={`h-full rounded-full transition-all duration-300 ${
+                  isFeverMode
+                    ? 'bg-gradient-to-r from-red-500 via-yellow-400 to-pink-500 animate-pulse'
+                    : 'bg-gradient-to-r from-amber-500 to-orange-500'
+                }`}
+                style={{ width: `${roomHype}%` }}
+              />
+            </div>
+            <span className="text-[11px] font-black text-amber-300 font-mono">{roomHype}%</span>
+          </div>
         </div>
 
         {/* Right: Leader Controls & Raise Hand */}
@@ -607,12 +889,44 @@ export const RoomView: React.FC<RoomViewProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5 flex-1">
             {/* 1. Host Leader Video Card */}
             <div
-              className={`glass-panel rounded-2xl p-4 flex flex-col justify-between relative min-h-[220px] shadow-xl bg-gradient-to-br from-amber-950/20 to-slate-950 group transition-all overflow-hidden ${
-                luckySpotlightId === 'leader' || (isUserRoomLeader && luckySpotlightId === 'self')
+              onClick={(e) => handleCardTap('leader', room.leaderName, e.clientX, e.clientY)}
+              className={`glass-panel rounded-2xl p-4 flex flex-col justify-between relative min-h-[220px] shadow-xl bg-gradient-to-br from-amber-950/20 to-slate-950 group transition-all overflow-hidden cursor-pointer select-none ${
+                impactTargetId === 'leader' || (isUserRoomLeader && impactTargetId === 'self')
+                  ? 'animate-screen-shake'
+                  : ''
+              } ${
+                activeFaceFilters.some(
+                  (f) =>
+                    (f.targetId === 'leader' || (isUserRoomLeader && f.targetId === 'self')) &&
+                    f.filterType === 'fire_aura'
+                )
+                  ? 'animate-fire-border'
+                  : luckySpotlightId === 'leader' || (isUserRoomLeader && luckySpotlightId === 'self')
                   ? 'animate-lucky-spotlight border-4 border-amber-400 scale-[1.02]'
                   : 'border-2 border-amber-500/50'
               }`}
             >
+              {/* TikTok Live: Bouncing Combo Multiplier Badge */}
+              {comboCount > 1 &&
+                (comboTargetId === 'leader' || (isUserRoomLeader && comboTargetId === 'self')) && (
+                  <div className="absolute top-3 left-1/2 -translate-x-1/2 z-40 animate-combo-bounce pointer-events-none">
+                    <div
+                      className={`px-3 py-1 rounded-full font-black text-xs tracking-wider uppercase shadow-2xl flex items-center gap-1.5 border-2 ${
+                        comboCount >= 50
+                          ? 'bg-gradient-to-r from-red-600 via-pink-600 to-purple-600 text-white border-yellow-300 shadow-red-500/50'
+                          : comboCount >= 20
+                          ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 border-white shadow-amber-500/50'
+                          : 'bg-pink-600 text-white border-pink-300 shadow-pink-500/40'
+                      }`}
+                    >
+                      <span className="text-base animate-bounce">
+                        {comboCount >= 50 ? '🔥' : comboCount >= 20 ? '⚡' : '💖'}
+                      </span>
+                      <span>COMBO x{comboCount}</span>
+                    </div>
+                  </div>
+                )}
+
               {/* Comic Speech Bubble */}
               {renderSpeechBubbleOverlay('leader')}
               {isUserRoomLeader && renderSpeechBubbleOverlay('self')}
@@ -631,7 +945,7 @@ export const RoomView: React.FC<RoomViewProps> = ({
 
               {/* Video Feed / Avatar for Host */}
               {isUserRoomLeader && isCamOn ? (
-                <div className="absolute inset-0 bg-black z-0 rounded-2xl overflow-hidden">
+                <div className="absolute inset-0 bg-black z-0 rounded-2xl overflow-hidden pointer-events-none">
                   <video
                     ref={(node) => {
                       videoRef.current = node;
@@ -670,9 +984,10 @@ export const RoomView: React.FC<RoomViewProps> = ({
                 <div className="flex items-center gap-1.5">
                   {/* Gift Filter Trigger Button */}
                   <button
-                    onClick={() =>
-                      setActiveGiftMenuTarget(activeGiftMenuTarget === 'leader' ? null : 'leader')
-                    }
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveGiftMenuTarget(activeGiftMenuTarget === 'leader' ? null : 'leader');
+                    }}
                     className="p-1.5 rounded-lg bg-pink-500/20 hover:bg-pink-500/40 text-pink-300 border border-pink-500/30 text-xs flex items-center gap-1 transition-all cursor-pointer shadow-lg active:scale-95"
                     title={isUserRoomLeader ? 'Gắn filter lên camera của chính mình' : 'Tặng filter lên camera của Host'}
                   >
@@ -719,7 +1034,7 @@ export const RoomView: React.FC<RoomViewProps> = ({
                     <span>{room.leaderName}</span>
                     {isUserRoomLeader && <span className="text-amber-300 text-[11px] font-medium">(Bạn)</span>}
                   </p>
-                  <p className="text-[10px] text-amber-300">Đang điều phối buổi thảo luận</p>
+                  <p className="text-[10px] text-amber-300">Chạm thẻ để bắn tim combo! 💖</p>
                 </div>
                 <div className="flex items-end gap-0.5 h-3.5">
                   <span className="w-1 bg-amber-400 rounded-full animate-soundwave"></span>
@@ -732,12 +1047,27 @@ export const RoomView: React.FC<RoomViewProps> = ({
             {/* 2. Current User Card (Self) - Chỉ hiển thị nếu người dùng KHÔNG PHẢI là chủ phòng (Leader) */}
             {!isUserRoomLeader && (
               <div
-                className={`glass-panel rounded-2xl p-4 flex flex-col justify-between relative min-h-[220px] group transition-all overflow-hidden ${
-                  luckySpotlightId === 'self'
+                onClick={(e) => handleCardTap('self', currentUser.name, e.clientX, e.clientY)}
+                className={`glass-panel rounded-2xl p-4 flex flex-col justify-between relative min-h-[220px] group transition-all overflow-hidden cursor-pointer select-none ${
+                  impactTargetId === 'self' ? 'animate-screen-shake' : ''
+                } ${
+                  activeFaceFilters.some((f) => f.targetId === 'self' && f.filterType === 'fire_aura')
+                    ? 'animate-fire-border'
+                    : luckySpotlightId === 'self'
                     ? 'animate-lucky-spotlight border-4 border-amber-400 scale-[1.02]'
                     : 'border border-violet-500/40'
                 }`}
               >
+                {/* TikTok Live: Bouncing Combo Multiplier Badge */}
+                {comboCount > 1 && comboTargetId === 'self' && (
+                  <div className="absolute top-3 left-1/2 -translate-x-1/2 z-40 animate-combo-bounce pointer-events-none">
+                    <div className="px-3 py-1 rounded-full font-black text-xs tracking-wider uppercase shadow-2xl flex items-center gap-1.5 border-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white border-pink-300 shadow-pink-500/50">
+                      <span className="text-base animate-bounce">💖</span>
+                      <span>COMBO x{comboCount}</span>
+                    </div>
+                  </div>
+                )}
+
                 {/* Comic Speech Bubble */}
                 {renderSpeechBubbleOverlay('self')}
 
@@ -754,7 +1084,7 @@ export const RoomView: React.FC<RoomViewProps> = ({
 
                 {/* Video Feed / Avatar */}
                 {isCamOn ? (
-                  <div className="absolute inset-0 bg-black z-0 rounded-2xl overflow-hidden">
+                  <div className="absolute inset-0 bg-black z-0 rounded-2xl overflow-hidden pointer-events-none">
                     <video
                       ref={(node) => {
                         videoRef.current = node;
@@ -792,9 +1122,10 @@ export const RoomView: React.FC<RoomViewProps> = ({
                   <div className="flex items-center gap-1.5">
                     {/* Self Filter Button */}
                     <button
-                      onClick={() =>
-                        setActiveGiftMenuTarget(activeGiftMenuTarget === 'self' ? null : 'self')
-                      }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveGiftMenuTarget(activeGiftMenuTarget === 'self' ? null : 'self');
+                      }}
                       className="p-1.5 rounded-lg bg-pink-500/20 hover:bg-pink-500/40 text-pink-300 border border-pink-500/30 text-xs flex items-center gap-1 transition-all cursor-pointer shadow-lg active:scale-95"
                       title="Gắn filter lên camera của chính mình"
                     >
@@ -818,7 +1149,7 @@ export const RoomView: React.FC<RoomViewProps> = ({
                 <div className="relative z-10 bg-slate-950/80 backdrop-blur-md p-2.5 rounded-xl border border-white/10 flex items-center justify-between">
                   <div>
                     <span className="text-xs font-bold text-white">{currentUser.name} (Bạn)</span>
-                    <p className="text-[10px] text-slate-400">Thành viên lớp học</p>
+                    <p className="text-[10px] text-slate-400">Chạm thẻ để bắn tim combo! 💖</p>
                   </div>
                   {isMicMuted ? (
                     <MicOff className="w-3.5 h-3.5 text-rose-400" />
@@ -835,12 +1166,27 @@ export const RoomView: React.FC<RoomViewProps> = ({
               .map((p) => (
                 <div
                   key={p.id}
-                  className={`glass-panel rounded-2xl p-4 flex flex-col justify-between relative min-h-[220px] group transition-all ${
-                    luckySpotlightId === p.id
+                  onClick={(e) => handleCardTap(p.id, p.name, e.clientX, e.clientY)}
+                  className={`glass-panel rounded-2xl p-4 flex flex-col justify-between relative min-h-[220px] group transition-all cursor-pointer select-none ${
+                    impactTargetId === p.id ? 'animate-screen-shake' : ''
+                  } ${
+                    activeFaceFilters.some((f) => f.targetId === p.id && f.filterType === 'fire_aura')
+                      ? 'animate-fire-border'
+                      : luckySpotlightId === p.id
                       ? 'animate-lucky-spotlight border-4 border-amber-400 scale-[1.02]'
                       : 'border border-white/10'
                   }`}
                 >
+                  {/* TikTok Live: Bouncing Combo Multiplier Badge */}
+                  {comboCount > 1 && comboTargetId === p.id && (
+                    <div className="absolute top-3 left-1/2 -translate-x-1/2 z-40 animate-combo-bounce pointer-events-none">
+                      <div className="px-3 py-1 rounded-full font-black text-xs tracking-wider uppercase shadow-2xl flex items-center gap-1.5 border-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white border-pink-300 shadow-pink-500/50">
+                        <span className="text-base animate-bounce">💖</span>
+                        <span>COMBO x{comboCount}</span>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Comic Speech Bubble */}
                   {renderSpeechBubbleOverlay(p.id)}
 
@@ -871,9 +1217,10 @@ export const RoomView: React.FC<RoomViewProps> = ({
                     <div className="flex items-center gap-1.5">
                       {/* Target Gift Filter Button */}
                       <button
-                        onClick={() =>
-                          setActiveGiftMenuTarget(activeGiftMenuTarget === p.id ? null : p.id)
-                        }
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveGiftMenuTarget(activeGiftMenuTarget === p.id ? null : p.id);
+                        }}
                         className="p-1.5 rounded-lg bg-pink-500/20 hover:bg-pink-500/40 text-pink-300 border border-pink-500/30 text-xs flex items-center gap-1 transition-all cursor-pointer shadow-lg active:scale-95"
                         title={`Tặng quà & filter lên camera của ${p.name}`}
                       >
@@ -897,7 +1244,7 @@ export const RoomView: React.FC<RoomViewProps> = ({
                   <div className="relative z-10 bg-slate-950/80 backdrop-blur-md p-2.5 rounded-xl border border-white/10 flex items-center justify-between">
                     <div>
                       <p className="text-xs font-bold text-white">{p.name}</p>
-                      <p className="text-[10px] text-slate-400">Đang lắng nghe</p>
+                      <p className="text-[10px] text-slate-400">Chạm thẻ để bắn tim combo! 💖</p>
                     </div>
                     <MicOff className="w-3.5 h-3.5 text-slate-500" />
                   </div>
@@ -909,6 +1256,20 @@ export const RoomView: React.FC<RoomViewProps> = ({
           <div className="glass-panel p-3 rounded-2xl flex flex-wrap items-center justify-between gap-3">
             {/* Reaction Emoji & Lucky Wheel Buttons */}
             <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+              {/* TikTok Live: Bắn Tim Cổ Vũ (Combo Button) */}
+              <button
+                onClick={(e) => {
+                  const targetId = isUserRoomLeader ? 'leader' : 'leader';
+                  const targetName = room.leaderName;
+                  handleCardTap(targetId, targetName, e.clientX, e.clientY);
+                }}
+                className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white text-xs font-black flex items-center gap-1.5 transition-all active:scale-90 cursor-pointer shadow-lg shadow-pink-500/25 flex-shrink-0"
+                title="Bấm liên tục để bắn tim dồn dập Combo x10 x50 cho Host!"
+              >
+                <span className="text-sm animate-bounce">💖</span>
+                <span>Bắn Tim {comboCount > 1 ? `x${comboCount}` : 'Combo'}</span>
+              </button>
+
               <span className="text-xs text-slate-400 font-semibold px-1 whitespace-nowrap hidden sm:inline">
                 Cảm xúc:
               </span>
@@ -916,7 +1277,7 @@ export const RoomView: React.FC<RoomViewProps> = ({
                 <button
                   key={emoji}
                   onClick={() => triggerFloatingEmoji(emoji)}
-                  className="w-9 h-9 rounded-xl glass-button text-base flex items-center justify-center hover:scale-125 transition-transform active:scale-95 cursor-pointer"
+                  className="w-9 h-9 rounded-xl glass-button text-base flex items-center justify-center hover:scale-125 transition-transform active:scale-95 cursor-pointer flex-shrink-0"
                 >
                   {emoji}
                 </button>
@@ -924,32 +1285,32 @@ export const RoomView: React.FC<RoomViewProps> = ({
 
               <button
                 onClick={triggerApplause}
-                className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/35 border border-amber-500/40 text-amber-300 text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+                className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/35 border border-amber-500/40 text-amber-300 text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer flex-shrink-0"
                 title="Bắn pháo hoa tán thưởng bài phát biểu"
               >
                 <PartyPopper className="w-3.5 h-3.5 text-amber-400" />
-                <span>Vỗ Tay Tán Thưởng</span>
+                <span>Vỗ Tay</span>
               </button>
 
               {/* TÍNH NĂNG 3: Vòng Quay May Mắn Button */}
               <button
                 onClick={() => setIsLuckyWheelOpen(true)}
-                className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-yellow-500 via-amber-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-slate-950 text-xs font-black flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-lg shadow-amber-500/20"
+                className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-yellow-500 via-amber-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-slate-950 text-xs font-black flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-lg shadow-amber-500/20 flex-shrink-0"
                 title="Quay số chọn người tiếp theo mở mic"
               >
                 <span className="text-sm">🎡</span>
-                <span>Vòng Quay May Mắn</span>
+                <span>Vòng Quay</span>
               </button>
 
               {/* TÍNH NĂNG STREAK: Nhận Streak Buổi Học */}
               {onClaimStreak && (
                 <button
                   onClick={onClaimStreak}
-                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 hover:from-orange-400 hover:to-yellow-400 text-slate-950 text-xs font-black flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-lg shadow-orange-500/25"
+                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 hover:from-orange-400 hover:to-yellow-400 text-slate-950 text-xs font-black flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-lg shadow-orange-500/25 flex-shrink-0"
                   title="Hoàn thành buổi học hôm nay và thắp sáng ngọn lửa Streak!"
                 >
                   <span className="text-sm">🔥</span>
-                  <span>Nhận Streak Buổi Học</span>
+                  <span>Nhận Streak</span>
                 </button>
               )}
             </div>
