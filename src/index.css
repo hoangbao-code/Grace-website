@@ -170,3 +170,8 @@ body {
 .animate-lucky-spotlight {
   animation: luckySpotlight 1s infinite alternate;
 }
+
+/* Webcam Mirror Effect */
+.mirror {
+  transform: scaleX(-1);
+}

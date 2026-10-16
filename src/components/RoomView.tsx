@@ -91,6 +91,7 @@ export const RoomView: React.FC<RoomViewProps> = ({
 
   // Host Leader specific controls
   const isLeaderOrAdmin = currentUser.role === 'admin' || currentUser.id === room.leaderId;
+  const isUserRoomLeader = currentUser.id === room.leaderId;
   const [newVocabInput, setNewVocabInput] = useState<string>('');
   const [vocabList, setVocabList] = useState<string[]>(room.vocabList || []);
 
@@ -116,29 +117,81 @@ export const RoomView: React.FC<RoomViewProps> = ({
       : []
   );
 
-  // Webcam Toggle
+  // Tự động gắn luồng camera vào video element mỗi khi isCamOn = true
+  useEffect(() => {
+    if (isCamOn && videoRef.current && streamRef.current) {
+      if (videoRef.current.srcObject !== streamRef.current) {
+        videoRef.current.srcObject = streamRef.current;
+      }
+      videoRef.current.play().catch((err) => {
+        console.warn('Auto-play video error:', err);
+      });
+    }
+  }, [isCamOn]);
+
+  // Giải phóng camera khi rời phòng học
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+    };
+  }, []);
+
+  // Webcam Toggle với cơ chế Fallback và gán stream an toàn
   const toggleCamera = async () => {
     if (isCamOn) {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
       }
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
       setIsCamOn(false);
       onShowToast('Đã tắt camera', 'indigo');
     } else {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: { ideal: 640 }, height: { ideal: 480 } },
-          audio: false,
-        });
+        let stream: MediaStream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+              facingMode: 'user',
+            },
+            audio: false,
+          });
+        } catch {
+          // Fallback nếu máy/trình duyệt không hỗ trợ constraint độ phân giải cao
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false,
+          });
+        }
+
         streamRef.current = stream;
+        setIsCamOn(true);
+
+        // Gán ngay lập tức nếu video element đã có sẵn trong DOM
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
+          videoRef.current.play().catch(() => {});
         }
-        setIsCamOn(true);
+
         onShowToast('Đã bật camera phát biểu!', 'emerald');
-      } catch (err) {
-        onShowToast('Không thể mở camera (vui lòng cấp quyền truy cập)', 'rose');
+      } catch (err: any) {
+        console.error('Webcam error:', err);
+        let errorMsg = 'Không thể mở camera (vui lòng cấp quyền truy cập)';
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          errorMsg = 'Trình duyệt bị từ chối quyền truy cập camera. Vui lòng cho phép quyền Camera trên thanh địa chỉ!';
+        } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+          errorMsg = 'Không tìm thấy thiết bị webcam trên máy tính!';
+        } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+          errorMsg = 'Webcam đang bị ứng dụng khác (Zoom, Google Meet, Teams, v.v.) chiếm dụng!';
+        }
+        onShowToast(errorMsg, 'rose');
       }
     }
   };
@@ -286,12 +339,17 @@ export const RoomView: React.FC<RoomViewProps> = ({
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages]);
 
-  // All wheel participants
-  const wheelParticipants = [
-    { id: 'leader', name: room.leaderName, avatarText: room.leaderAvatar },
-    { id: 'self', name: currentUser.name, avatarText: currentUser.avatarText },
-    ...participants.filter((p) => p.role !== 'leader'),
-  ];
+  // All wheel participants (không bị trùng lặp nếu người dùng chính là Leader)
+  const wheelParticipants = isUserRoomLeader
+    ? [
+        { id: 'leader', name: room.leaderName, avatarText: room.leaderAvatar },
+        ...participants.filter((p) => p.role !== 'leader'),
+      ]
+    : [
+        { id: 'leader', name: room.leaderName, avatarText: room.leaderAvatar },
+        { id: 'self', name: currentUser.name, avatarText: currentUser.avatarText },
+        ...participants.filter((p) => p.role !== 'leader'),
+      ];
 
   // Helper to render Face Filters overlay on camera
   const renderFaceFilterOverlay = (targetId: string) => {
@@ -549,40 +607,64 @@ export const RoomView: React.FC<RoomViewProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5 flex-1">
             {/* 1. Host Leader Video Card */}
             <div
-              className={`glass-panel rounded-2xl p-4 flex flex-col justify-between relative min-h-[220px] shadow-xl bg-gradient-to-br from-amber-950/20 to-slate-950 group transition-all ${
-                luckySpotlightId === 'leader'
+              className={`glass-panel rounded-2xl p-4 flex flex-col justify-between relative min-h-[220px] shadow-xl bg-gradient-to-br from-amber-950/20 to-slate-950 group transition-all overflow-hidden ${
+                luckySpotlightId === 'leader' || (isUserRoomLeader && luckySpotlightId === 'self')
                   ? 'animate-lucky-spotlight border-4 border-amber-400 scale-[1.02]'
                   : 'border-2 border-amber-500/50'
               }`}
             >
               {/* Comic Speech Bubble */}
               {renderSpeechBubbleOverlay('leader')}
+              {isUserRoomLeader && renderSpeechBubbleOverlay('self')}
 
               {/* Face Filter Overlay */}
               {renderFaceFilterOverlay('leader')}
+              {isUserRoomLeader && renderFaceFilterOverlay('self')}
 
               {/* Lucky Spotlight Banner */}
-              {luckySpotlightId === 'leader' && (
+              {(luckySpotlightId === 'leader' || (isUserRoomLeader && luckySpotlightId === 'self')) && (
                 <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 px-3 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 font-black text-[10px] tracking-wider uppercase shadow-xl animate-bounce flex items-center gap-1">
                   <Trophy className="w-3 h-3" />
                   <span>NGƯỜI ĐƯỢC CHỌN TỎA SÁNG ⭐</span>
                 </div>
               )}
 
-              {/* Avatar Center */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="w-24 h-24 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-600 p-1 shadow-2xl">
-                  <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-3xl font-extrabold text-white">
-                    {room.leaderAvatar}
+              {/* Video Feed / Avatar for Host */}
+              {isUserRoomLeader && isCamOn ? (
+                <div className="absolute inset-0 bg-black z-0 rounded-2xl overflow-hidden">
+                  <video
+                    ref={(node) => {
+                      videoRef.current = node;
+                      if (node && streamRef.current && node.srcObject !== streamRef.current) {
+                        node.srcObject = streamRef.current;
+                        node.play().catch(() => {});
+                      }
+                    }}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover mirror"
+                  />
+                  <div className="absolute top-3 right-3 px-2 py-0.5 rounded bg-amber-500 text-slate-950 text-[10px] font-black uppercase shadow-lg z-10 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-ping"></span>
+                    <span>HOST CAM LIVE</span>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="w-24 h-24 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-600 p-1 shadow-2xl">
+                    <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-3xl font-extrabold text-white">
+                      {room.leaderAvatar}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Top Controls on Video Card */}
               <div className="relative z-20 flex items-center justify-between">
-                <span className="text-[10px] px-2.5 py-1 rounded-full bg-amber-500 text-slate-950 font-extrabold flex items-center gap-1">
+                <span className="text-[10px] px-2.5 py-1 rounded-full bg-amber-500 text-slate-950 font-extrabold flex items-center gap-1 shadow-md">
                   <Crown className="w-3 h-3 fill-current" />
-                  <span>LEADER (HOST)</span>
+                  <span>{isUserRoomLeader ? 'BẠN (LEADER HOST)' : 'LEADER (HOST)'}</span>
                 </span>
 
                 <div className="flex items-center gap-1.5">
@@ -592,25 +674,51 @@ export const RoomView: React.FC<RoomViewProps> = ({
                       setActiveGiftMenuTarget(activeGiftMenuTarget === 'leader' ? null : 'leader')
                     }
                     className="p-1.5 rounded-lg bg-pink-500/20 hover:bg-pink-500/40 text-pink-300 border border-pink-500/30 text-xs flex items-center gap-1 transition-all cursor-pointer shadow-lg active:scale-95"
-                    title="Tặng quà & filter lên camera của Cô giáo"
+                    title={isUserRoomLeader ? 'Gắn filter lên camera của chính mình' : 'Tặng filter lên camera của Host'}
                   >
                     <Gift className="w-3.5 h-3.5 text-pink-400" />
-                    <span className="text-[10px] font-bold hidden sm:inline">Tặng Filter</span>
+                    <span className="text-[10px] font-bold hidden sm:inline">Filter</span>
                   </button>
 
-                  <span className="w-6 h-6 rounded-full bg-black/60 flex items-center justify-center text-emerald-400">
-                    <Mic className="w-3.5 h-3.5" />
+                  {isUserRoomLeader && isHandRaised && (
+                    <span className="px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[10px] font-extrabold flex items-center gap-1 animate-bounce">
+                      <Hand className="w-3 h-3" />
+                      <span>Giơ Tay</span>
+                    </span>
+                  )}
+
+                  <span
+                    className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                      isUserRoomLeader
+                        ? isMicMuted
+                          ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                          : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                        : 'bg-black/60 text-emerald-400'
+                    }`}
+                  >
+                    {isUserRoomLeader ? (
+                      isMicMuted ? (
+                        <MicOff className="w-3.5 h-3.5" />
+                      ) : (
+                        <Mic className="w-3.5 h-3.5" />
+                      )
+                    ) : (
+                      <Mic className="w-3.5 h-3.5" />
+                    )}
                   </span>
                 </div>
               </div>
 
               {/* Gift Menu Dropdown */}
-              {renderGiftMenu('leader', room.leaderName)}
+              {renderGiftMenu('leader', isUserRoomLeader ? `${currentUser.name} (Bạn)` : room.leaderName)}
 
               {/* Bottom Info Strip */}
               <div className="relative z-10 bg-slate-950/80 backdrop-blur-md p-2.5 rounded-xl border border-white/10 flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-bold text-white">{room.leaderName}</p>
+                  <p className="text-xs font-bold text-white flex items-center gap-1">
+                    <span>{room.leaderName}</span>
+                    {isUserRoomLeader && <span className="text-amber-300 text-[11px] font-medium">(Bạn)</span>}
+                  </p>
                   <p className="text-[10px] text-amber-300">Đang điều phối buổi thảo luận</p>
                 </div>
                 <div className="flex items-end gap-0.5 h-3.5">
@@ -621,96 +729,105 @@ export const RoomView: React.FC<RoomViewProps> = ({
               </div>
             </div>
 
-            {/* 2. Current User Card (Self) */}
-            <div
-              className={`glass-panel rounded-2xl p-4 flex flex-col justify-between relative min-h-[220px] group transition-all ${
-                luckySpotlightId === 'self'
-                  ? 'animate-lucky-spotlight border-4 border-amber-400 scale-[1.02]'
-                  : 'border border-violet-500/40'
-              }`}
-            >
-              {/* Comic Speech Bubble */}
-              {renderSpeechBubbleOverlay('self')}
+            {/* 2. Current User Card (Self) - Chỉ hiển thị nếu người dùng KHÔNG PHẢI là chủ phòng (Leader) */}
+            {!isUserRoomLeader && (
+              <div
+                className={`glass-panel rounded-2xl p-4 flex flex-col justify-between relative min-h-[220px] group transition-all overflow-hidden ${
+                  luckySpotlightId === 'self'
+                    ? 'animate-lucky-spotlight border-4 border-amber-400 scale-[1.02]'
+                    : 'border border-violet-500/40'
+                }`}
+              >
+                {/* Comic Speech Bubble */}
+                {renderSpeechBubbleOverlay('self')}
 
-              {/* Face Filter Overlay */}
-              {renderFaceFilterOverlay('self')}
+                {/* Face Filter Overlay */}
+                {renderFaceFilterOverlay('self')}
 
-              {/* Lucky Spotlight Banner */}
-              {luckySpotlightId === 'self' && (
-                <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 px-3 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 font-black text-[10px] tracking-wider uppercase shadow-xl animate-bounce flex items-center gap-1">
-                  <Trophy className="w-3 h-3" />
-                  <span>BẠN LÀ NGƯỜI ĐƯỢC CHỌN TỎA SÁNG ⭐</span>
-                </div>
-              )}
-
-              {/* Video Feed / Avatar */}
-              {isCamOn ? (
-                <div className="absolute inset-0 bg-black z-0 rounded-2xl overflow-hidden">
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="w-full h-full object-cover mirror"
-                  />
-                  <div className="absolute top-3 right-3 px-2 py-0.5 rounded bg-red-600/80 text-white text-[10px] font-bold">
-                    WEBCAM LIVE
+                {/* Lucky Spotlight Banner */}
+                {luckySpotlightId === 'self' && (
+                  <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 px-3 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 font-black text-[10px] tracking-wider uppercase shadow-xl animate-bounce flex items-center gap-1">
+                    <Trophy className="w-3 h-3" />
+                    <span>BẠN LÀ NGƯỜI ĐƯỢC CHỌN TỎA SÁNG ⭐</span>
                   </div>
-                </div>
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-violet-600 to-indigo-600 p-1 shadow-xl">
-                    <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-2xl font-bold text-white">
-                      {currentUser.avatarText}
+                )}
+
+                {/* Video Feed / Avatar */}
+                {isCamOn ? (
+                  <div className="absolute inset-0 bg-black z-0 rounded-2xl overflow-hidden">
+                    <video
+                      ref={(node) => {
+                        videoRef.current = node;
+                        if (node && streamRef.current && node.srcObject !== streamRef.current) {
+                          node.srcObject = streamRef.current;
+                          node.play().catch(() => {});
+                        }
+                      }}
+                      autoPlay
+                      playsInline
+                      muted
+                      className="w-full h-full object-cover mirror"
+                    />
+                    <div className="absolute top-3 right-3 px-2 py-0.5 rounded bg-red-600/80 text-white text-[10px] font-bold z-10 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
+                      <span>WEBCAM LIVE</span>
                     </div>
                   </div>
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-violet-600 to-indigo-600 p-1 shadow-xl">
+                      <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-2xl font-bold text-white">
+                        {currentUser.avatarText}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Top Controls on Video Card */}
+                <div className="relative z-20 flex items-center justify-between">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-emerald-300 font-semibold border border-white/10">
+                    {currentUser.role === 'admin' ? '👑 Admin Bảo' : '🎓 Bạn'}
+                  </span>
+
+                  <div className="flex items-center gap-1.5">
+                    {/* Self Filter Button */}
+                    <button
+                      onClick={() =>
+                        setActiveGiftMenuTarget(activeGiftMenuTarget === 'self' ? null : 'self')
+                      }
+                      className="p-1.5 rounded-lg bg-pink-500/20 hover:bg-pink-500/40 text-pink-300 border border-pink-500/30 text-xs flex items-center gap-1 transition-all cursor-pointer shadow-lg active:scale-95"
+                      title="Gắn filter lên camera của chính mình"
+                    >
+                      <Gift className="w-3.5 h-3.5 text-pink-400" />
+                      <span className="text-[10px] font-bold hidden sm:inline">Filter</span>
+                    </button>
+
+                    {isHandRaised && (
+                      <span className="px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[10px] font-extrabold flex items-center gap-1 animate-bounce">
+                        <Hand className="w-3 h-3" />
+                        <span>Đang Giơ Tay</span>
+                      </span>
+                    )}
+                  </div>
                 </div>
-              )}
 
-              {/* Top Controls on Video Card */}
-              <div className="relative z-20 flex items-center justify-between">
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-emerald-300 font-semibold border border-white/10">
-                  {currentUser.role === 'admin' ? '👑 Admin Bảo' : '🎓 Bạn'}
-                </span>
+                {/* Gift Menu Dropdown */}
+                {renderGiftMenu('self', `${currentUser.name} (Bạn)`)}
 
-                <div className="flex items-center gap-1.5">
-                  {/* Self Filter Button */}
-                  <button
-                    onClick={() =>
-                      setActiveGiftMenuTarget(activeGiftMenuTarget === 'self' ? null : 'self')
-                    }
-                    className="p-1.5 rounded-lg bg-pink-500/20 hover:bg-pink-500/40 text-pink-300 border border-pink-500/30 text-xs flex items-center gap-1 transition-all cursor-pointer shadow-lg active:scale-95"
-                    title="Gắn filter lên camera của chính mình"
-                  >
-                    <Gift className="w-3.5 h-3.5 text-pink-400" />
-                    <span className="text-[10px] font-bold hidden sm:inline">Filter</span>
-                  </button>
-
-                  {isHandRaised && (
-                    <span className="px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[10px] font-extrabold flex items-center gap-1 animate-bounce">
-                      <Hand className="w-3 h-3" />
-                      <span>Đang Giơ Tay</span>
-                    </span>
+                {/* Bottom Info Strip */}
+                <div className="relative z-10 bg-slate-950/80 backdrop-blur-md p-2.5 rounded-xl border border-white/10 flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-white">{currentUser.name} (Bạn)</span>
+                    <p className="text-[10px] text-slate-400">Thành viên lớp học</p>
+                  </div>
+                  {isMicMuted ? (
+                    <MicOff className="w-3.5 h-3.5 text-rose-400" />
+                  ) : (
+                    <Mic className="w-3.5 h-3.5 text-emerald-400" />
                   )}
                 </div>
               </div>
-
-              {/* Gift Menu Dropdown */}
-              {renderGiftMenu('self', `${currentUser.name} (Bạn)`)}
-
-              {/* Bottom Info Strip */}
-              <div className="relative z-10 bg-slate-950/80 backdrop-blur-md p-2.5 rounded-xl border border-white/10 flex items-center justify-between">
-                <div>
-                  <span className="text-xs font-bold text-white">{currentUser.name} (Bạn)</span>
-                  <p className="text-[10px] text-slate-400">Thành viên lớp học</p>
-                </div>
-                {isMicMuted ? (
-                  <MicOff className="w-3.5 h-3.5 text-rose-400" />
-                ) : (
-                  <Mic className="w-3.5 h-3.5 text-emerald-400" />
-                )}
-              </div>
-            </div>
+            )}
 
             {/* 3. Other Students */}
             {participants
